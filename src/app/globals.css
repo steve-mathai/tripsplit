@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/* Palette: Kerala backwater teal + saffron accent on warm paper. */
+:root {
+  --paper: #fbf7ef;
+  --card: #ffffff;
+  --card-soft: #f5efe2;
+  --ink: #17302d;
+  --muted: #5d7270;
+  --line: #e7dfce;
+  --primary: #0f766e;
+  --primary-deep: #0a4f4a;
+  --primary-soft: #d9f0ec;
+  --hero: #0a4f4a;
+  --accent: #f29a1f;
+  --accent-deep: #c97a06;
+  --accent-soft: #fde9c4;
+  --good: #15803d;
+  --good-soft: #dcf5e3;
+  --bad: #c2410c;
+  --bad-soft: #fde3d6;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0d1a19;
+    --card: #152624;
+    --card-soft: #1b312e;
+    --ink: #e9f2ef;
+    --muted: #93aca8;
+    --line: #26413d;
+    --primary: #2dd4bf;
+    --primary-deep: #99f6e4;
+    --primary-soft: #123a36;
+    --hero: #0b3a36;
+    --accent: #fbbf24;
+    --accent-deep: #fcd34d;
+    --accent-soft: #3d2f10;
+    --good: #4ade80;
+    --good-soft: #12301e;
+    --bad: #fb923c;
+    --bad-soft: #3a1f12;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-card-soft: var(--card-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-soft: var(--primary-soft);
+  --color-hero: var(--hero);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+html {
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fixed bottom bar height, reused so page content never hides under it. */
+:root {
+  --tabbar-h: 4rem;
+}
+
+/* Custom @utility (not plain classes) so these can be both used in markup and @apply'd. */
+@utility card {
+  @apply rounded-2xl border border-line bg-card;
+  box-shadow: 0 1px 0 rgb(23 48 45 / 0.03), 0 8px 24px -16px rgb(23 48 45 / 0.18);
+}
+
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-primary text-white;
+  @media (prefers-color-scheme: dark) {
+    color: #052e2a;
+  }
+}
+
+@utility btn-accent {
+  @apply btn text-[#3a2200];
+  background: var(--accent);
+  box-shadow: 0 6px 16px -8px var(--accent-deep);
+}
+
+@utility btn-soft {
+  @apply btn bg-primary-soft text-primary-deep;
+}
+
+@utility btn-ghost {
+  @apply btn border border-line bg-card text-ink;
+}
+
+@utility btn-danger {
+  @apply btn bg-bad-soft text-bad;
+}
+
+@utility field {
+  @apply block min-h-11 w-full rounded-xl border border-line bg-card px-3.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/25;
+}
+
+@utility label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted;
+}
+
+@utility chip {
+  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-line bg-card px-4 text-sm font-medium text-ink transition active:scale-[0.97];
+  &[data-active="true"] {
+    @apply border-primary bg-primary-soft text-primary-deep;
+  }
+}
+
+@utility sheet-enter {
+  animation: sheet-up 0.22s ease-out;
+}
+
+/* Horizontal chip strip: scrolls but shows no scrollbar track, and fades out over the 1rem edge padding to hint at more. */
+.chip-row {
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 1rem), transparent);
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+textarea.field {
+  padding-block: 0.625rem;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  border-radius: 1rem;
+  background: linear-gradient(90deg, var(--card-soft) 0, var(--line) 50%, var(--card-soft) 100%);
+  background-size: 200px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.3s infinite linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .sheet-enter {
+    animation: none;
+  }
+}
