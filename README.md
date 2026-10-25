@@ -90,9 +90,9 @@ groups whose balances each add up to zero). Finding those groups is a subset pro
 (fine up to 20 of them, which is any real friend group) and then settles each group greedily,
 which inside a zero-sum group uses exactly size - 1 payments. Above 20 it falls back to greedy.
 
-Honest note on the demo: it needs 10 payments for 11 people, the maximum, because Aarav paid the
-₹27,500 homestay and everyone owes him something. The DP earns its keep on trips where sub-groups
-cancel out. The tests cover that, including a property test that checks the DP against brute
+Honest note on the demo: it needs 10 payments for 11 people, the maximum, because no smaller
+group of balances happens to cancel out (Aarav paid the ₹27,500 homestay, so most of the money
+flows back to him). The DP earns its keep on trips where sub-groups do cancel. The tests cover that, including a property test that checks the DP against brute
 force on random trips.
 
 ### Persistence: Postgres everywhere
@@ -146,7 +146,8 @@ runs the unit tests for the money, split, balance, settle-up and summary maths (
 3. Push the repo to GitHub and import it at [vercel.com/new](https://vercel.com/new). The framework
    preset is detected as Next.js, no build settings to change.
 4. In the Vercel project, add `DATABASE_URL` under Settings → Environment Variables (Production and
-   Preview), then deploy.
+   Preview), plus `NEXT_PUBLIC_SITE_URL` set to your live URL (for example
+   `https://tripsplit.vercel.app`) so WhatsApp link previews point at the right site. Then deploy.
 
 Without `DATABASE_URL` the app refuses to start on Vercel instead of quietly using a throwaway
 local database. When the schema changes, run `npm run db:generate`, commit the new file in
@@ -161,6 +162,15 @@ src/app/        pages and server actions (/t/[slug] and its tabs)
 src/components/ UI pieces: tab bar, identity picker, expense form, charts
 drizzle/        generated SQL migrations
 ```
+
+## Project docs
+
+- [PRD](docs/prd.md): problem, personas, user stories with acceptance criteria, success metrics.
+- [Architecture](docs/architecture.md): data model, request flow, the money and settle-up maths.
+- [Design](docs/design.md): visual language, screens, states and accessibility.
+- [Phases](docs/phases.md): what was built, and what comes next in what order.
+- [Rules](docs/rules.md): working rules for anyone (or any AI agent) changing the code.
+- [Memory](docs/memory.md): decision log, gotchas and current state.
 
 ## What I'd build next
 
