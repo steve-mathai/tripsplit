@@ -83,16 +83,16 @@ As a group, we want to decide where to go and see the day laid out, so that the 
 
 - The Plan tab shows one section per trip day, headed "Day N" with the short date (for example "Day 2 · Sat 31 Oct"), capped at 60 days. Items sort by time with untimed items last ("Any time"). A day with nothing shows "Nothing planned yet. Add the first thing."
 - "Add plan" per day: time (optional, `HH:MM`), place (required, max 120), notes (optional, max 500), and a checkbox "This is an option to vote on". The day must fall inside the trip dates.
-- An option shows an "Option" badge, 👍 and 👎 counts, emoji chips and a "Lock it in" button. Tapping a vote you already cast removes it. A member has at most one up/down vote and one emoji per item.
+- An option shows an "Option" badge, 👍 and 👎 counts, emoji chips and a "Lock in" button. Consecutive options at the same time are grouped under a "Vote" header. Tapping a vote you already cast removes it. A member has at most one up/down vote and one emoji per item.
 - Reactions are 🔥 😍 😴 💸 🤔 and are allowed on plans as well as options. Only emojis someone has used show as chips; the smiley-plus button opens the full set.
-- "Lock it in" turns an option into a plan, one way. It needs no identity. Vote buttons are hidden after lock-in, reactions stay.
+- "Lock in" turns an option into a plan, one way. It needs no identity. Vote buttons are hidden after lock-in, reactions stay.
 - Delete asks for confirmation. Vote and reaction taps update instantly (optimistic) and roll back with an inline error if the server refuses.
 
 ### F4. Expenses with equal, exact, shares and subset splits
 
 As anyone on the trip, I want to log what I paid and who it was for, so that nobody does the maths later.
 
-- Fields: amount (numeric keypad, rupees with up to two decimals), description, category (Stay 🏠, Travel 🚌, Food 🍛, Activities 🎟️), paid by (defaults to me, else the first member), date (a trip day, or "No specific day"; defaults to today in India if inside the trip, else day 1).
+- Fields: amount (numeric keypad, rupees with up to two decimals), description, category (Stay, Travel, Food, Activities, each with a line icon), paid by (defaults to me, else the first member), date (a trip day, or "No specific day"; defaults to today in India if inside the trip, else day 1).
 - Amount must be greater than 0 and at most ₹2,00,00,000. A third decimal rounds half up to the paisa.
 - Split modes: Equally, Exact, Shares. Any mode can be restricted to ticked members (All and None shortcuts). At least one person is required.
 - Equal: ticked people pay the same, leftover paise go by largest remainder, the form shows each person's amount.

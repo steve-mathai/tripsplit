@@ -194,9 +194,6 @@ export function ExpenseForm({
             className="field !border-0 !bg-transparent !px-1 font-display !text-4xl font-semibold !ring-0"
           />
         </div>
-        {amountText && amountPaise !== null && (
-          <p className="mt-1 text-sm text-muted">{formatINR(amountPaise)}</p>
-        )}
         {amountText && amountPaise === null && <p className="mt-1 text-sm text-bad">That does not look like an amount.</p>}
 
         <label className="label mt-4" htmlFor="description">
@@ -215,22 +212,23 @@ export function ExpenseForm({
       <div className="card mb-4 p-4">
         <span className="label">Category</span>
         <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Category">
-          {CATEGORIES.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="radio"
-              aria-checked={category === key}
-              data-active={category === key}
-              onClick={() => setCategory(key)}
-              className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-card text-xs font-semibold transition active:scale-95 data-[active=true]:border-primary data-[active=true]:bg-primary-soft data-[active=true]:text-primary-deep"
-            >
-              <span className="text-2xl" aria-hidden="true">
-                {CATEGORY_META[key].emoji}
-              </span>
-              {CATEGORY_META[key].label}
-            </button>
-          ))}
+          {CATEGORIES.map((key) => {
+            const { Icon, label } = CATEGORY_META[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                role="radio"
+                aria-checked={category === key}
+                data-active={category === key}
+                onClick={() => setCategory(key)}
+                className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-card text-xs font-semibold transition active:scale-95 data-[active=true]:border-primary data-[active=true]:bg-primary-soft data-[active=true]:text-primary-deep"
+              >
+                <Icon width={26} height={26} />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">

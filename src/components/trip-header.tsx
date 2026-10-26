@@ -38,7 +38,8 @@ export function TripHeader({
       <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full text-paper" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 22c40 0 40-14 80-14s40 14 80 14 40-14 80-14 40 14 80 14 40-14 80-14v32H0z" fill="currentColor" />
       </svg>
-      <div className="pointer-events-none absolute -right-8 -top-14 h-36 w-36 rounded-full bg-accent/90" aria-hidden="true" />
+      {/* A soft glow, not a solid disc, so nothing hard-edged sits behind the Share button. */}
+      <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/25 blur-2xl" aria-hidden="true" />
       <div className="relative mx-auto max-w-[640px]">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/" className="min-h-11 content-center font-display text-lg font-semibold tracking-tight text-white/90">

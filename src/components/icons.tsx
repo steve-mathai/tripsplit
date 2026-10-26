@@ -168,3 +168,32 @@ export const CalendarIcon = (p: IconProps) => (
     <path d="M3.5 10h17M8 3v4M16 3v4" />
   </Icon>
 );
+
+export const HomeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 11.5 12 5l8 6.5" />
+    <path d="M6 10v8.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10" />
+    <path d="M10 19.5v-5h4v5" />
+  </Icon>
+);
+
+export const BusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="3.5" width="16" height="14" rx="3" />
+    <path d="M4 11h16M7 17.5V20M17 17.5V20M8 14.2h.01M16 14.2h.01" />
+  </Icon>
+);
+
+export const FoodIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 11h17a8.5 8.5 0 0 1-17 0Z" />
+    <path d="M8.5 4.5c0 1.5 1.5 1.5 1.5 3M13.5 4.5c0 1.5 1.5 1.5 1.5 3" />
+  </Icon>
+);
+
+export const TicketIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 8a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2.5a1.5 1.5 0 0 0 0 3V16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2.5a1.5 1.5 0 0 0 0-3V8Z" />
+    <path d="M14.5 7.5V9M14.5 11.25v1.5M14.5 15v1.5" />
+  </Icon>
+);

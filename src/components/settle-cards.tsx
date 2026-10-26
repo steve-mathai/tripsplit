@@ -57,7 +57,7 @@ export function TransferCard({ line, tripName }: { line: SettleLine; tripName: s
           </a>
         )}
       </div>
-      <p className="shrink-0 font-display text-base font-semibold tabular-nums text-accent-deep">{formatINR(line.amountPaise)}</p>
+      <p className="shrink-0 text-base font-bold tabular-nums text-ink">{formatINR(line.amountPaise)}</p>
       <CopyButton text={transferLine(line)} label={`Copy ${transferLine(line)}`} iconOnly className="btn-ghost !h-11 !w-11 shrink-0 !px-0" />
     </li>
   );

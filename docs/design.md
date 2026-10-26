@@ -32,7 +32,7 @@ Light is the default; dark applies automatically through `prefers-color-scheme` 
 | `--primary-soft` | `#d9f0ec` | `#123a36` | Active chip and tab backgrounds |
 | `--hero` | `#0a4f4a` | `#0b3a36` | Header and landing hero |
 | `--accent` | `#f29a1f` | `#fbbf24` | Saffron: the main call to action, option badge, header sun |
-| `--accent-deep` | `#c97a06` | `#fcd34d` | Saffron text on light backgrounds, transfer amounts |
+| `--accent-deep` | `#c97a06` | `#fcd34d` | Saffron text on light backgrounds |
 | `--accent-soft` | `#fde9c4` | `#3d2f10` | Option cards, the identity banner, "Per head" stat |
 | `--good` / `--good-soft` | `#15803d` / `#dcf5e3` | `#4ade80` / `#12301e` | "gets back", up-votes, copied state |
 | `--bad` / `--bad-soft` | `#c2410c` / `#fde3d6` | `#fb923c` / `#3a1f12` | "owes", down-votes, errors, delete |
@@ -41,7 +41,7 @@ The meta `theme-color` is `#0f766e` in light and `#0d1a19` in dark. The app icon
 
 Fixed colours that do not change in dark mode: WhatsApp green `#25d366` with `#052e16` text; the sheet backdrop `#0a1f1d` at 55%; the saffron button text `#3a2200`; the category and avatar palettes below. In dark mode `btn-primary` switches its text to `#052e2a`.
 
-Category colours (donut and bars, [categories.ts](../src/components/categories.ts)): Stay `#0f766e` with 🏠, Travel `#4f46e5` with 🚌, Food `#d97706` with 🍛, Activities `#be185d` with 🎟️.
+Category colours (donut and bars, [categories.ts](../src/components/categories.ts)): Stay `#0f766e` with a home line icon, Travel `#4f46e5` with a bus, Food `#d97706` with a bowl, Activities `#be185d` with a ticket (all from [icons.tsx](../src/components/icons.tsx)).
 
 Avatar palette, handed out in join order and wrapping after 12 ([types.ts](../src/lib/types.ts)): `#0f766e`, `#d97706`, `#be185d`, `#4f46e5`, `#15803d`, `#b91c1c`, `#0369a1`, `#7e22ce`, `#c2410c`, `#4d7c0f`, `#0e7490`, `#a21caf`. Initials are white, or `#17302d` when the colour's perceived luminance is above 0.62, so any future colour stays legible. One word gives two letters ("Meera" gives "ME"), more gives first and last initials.
 
@@ -67,7 +67,7 @@ Key sizes: landing headline 2.6rem (3rem from the `sm` breakpoint), trip title 1
 
 | Component | Look and behaviour | Source |
 | --- | --- | --- |
-| Header with wave | `--hero` block with a saffron circle bleeding off the top right and a wave path in the paper colour along the bottom. Holds wordmark (links home), Share button, trip name, date range, base location with a pin, and a "You: Name" pill. On add and edit expense pages it shrinks to a 56px bar with just the trip name. | [trip-header.tsx](../src/components/trip-header.tsx) |
+| Header with wave | `--hero` block with a soft saffron glow (a blurred 25% circle) at the top right and a wave path in the paper colour along the bottom. Holds wordmark (links home), solid white Share pill, trip name, date range, base location with a pin, and a "You: Name" pill. On add and edit expense pages it shrinks to a 56px bar with just the trip name. | [trip-header.tsx](../src/components/trip-header.tsx) |
 | Bottom tab bar | Fixed to the bottom, five equal columns (Plan, Expenses, Settle, Summary, People), 64px tall plus the safe-area inset. The active tab has a `--primary-soft` pill behind its icon and `--primary-deep` text; `aria-current="page"`. Hidden on expense form pages, which have their own save bar. | [tab-bar.tsx](../src/components/tab-bar.tsx) |
 | Card | White surface, 16px radius, border and soft shadow (`card` utility). | globals.css |
 | Chips | 44px pill. `data-active="true"` turns it teal. Category filters sit in a horizontally scrolling `chip-row` that fades out at the right edge. Vote chips go green or orange when active. | globals.css |
@@ -75,11 +75,11 @@ Key sizes: landing headline 2.6rem (3rem from the `sm` breakpoint), trip title 1
 | Fields | 44px tall, 16px text, teal border and 2px ring on focus. Labels are small uppercase. | globals.css |
 | Sheet | Bottom sheet on phones and centred card on desktop, max height 88dvh, backdrop tap or Escape closes, page scroll locks while open. Used for "Invite the gang" and "Who are you?". | [sheet.tsx](../src/components/sheet.tsx) |
 | Avatar | Coloured circle with initials, sizes 28, 40 and 56px, `aria-hidden` because the name is always next to it. | [avatar.tsx](../src/components/avatar.tsx) |
-| Category tiles | Four large tiles (emoji over label) in a radio group on the expense form; small emoji badges on list rows. | expense-form.tsx, expense-list.tsx |
+| Category tiles | Four large tiles (line icon over label) in a radio group on the expense form; small icon badges, tinted in the category colour, on list rows and filter chips. | expense-form.tsx, expense-list.tsx |
 | Identity banner | Saffron-tinted card above the page content with a scrolling row of name chips and a dashed "I'm not on the list" chip. | [identity.tsx](../src/components/identity.tsx) |
 | Charts | Horizontal bars (with an optional second-measure tick) and a donut, both server-rendered and library-free. | [bars.tsx](../src/components/bars.tsx) |
 | Skeletons | Shimmering blocks sized per route, announced with `aria-busy`. | [skeletons.tsx](../src/components/skeletons.tsx) |
-| Icons | 22 inline SVGs in one file (map, wallet, scale, chart, users, share, WhatsApp, UPI and so on). Tab icons are 22px. | [icons.tsx](../src/components/icons.tsx) |
+| Icons | 26 inline SVGs in one file (map, wallet, scale, chart, users, share, WhatsApp, UPI, the four category icons and so on). Tab icons are 22px. | [icons.tsx](../src/components/icons.tsx) |
 
 ## Screens
 
@@ -91,23 +91,23 @@ Teal hero with the wordmark and the headline "Plan the trip. / Split the bill. /
 
 ### Plan (`/t/<slug>`)
 
-One section per trip day with a serif heading ("Day 1" and the short date in muted text). Each item is a card: time on the left in teal ("6:00 am", or muted "Any time"), title and notes, a trash icon top right, then a row of reaction chips and a smiley-plus button. Options get a saffron-tinted card, an "Option" badge, 👍 and 👎 counts and a full-width "Lock it in" button. Under each day, a dashed "Add plan" button opens an inline card form (Time, Place, Notes, the option checkbox, Cancel and Add). Key interactions: vote and reaction taps update at once; tapping your own vote again clears it; hovering a chip shows who voted through its title text (desktop only).
+One section per trip day with a serif heading ("Day 1" and the short date in muted text). Each item is a card: time on the left in teal ("6:00 am", or muted "Any time"), title and notes, a trash icon top right (a plain item with no reactions also gets its smiley-plus button there, so it does not spend a row on it), then a row of reaction chips and a smiley-plus button when there is anything to show. Options get a saffron-tinted card, an "Option" badge, 👍 and 👎 counts and a compact "Lock in" pill at the end of the vote row. Consecutive timed options at the same time sit together in one tinted panel with a left saffron border and a "Vote · N options" header, and drop their own badge. Under each day, a dashed "Add plan" button opens an inline card form (Time, Place, Notes, the option checkbox, Cancel and Add). Key interactions: vote and reaction taps update at once; tapping your own vote again clears it; hovering a chip shows who voted through its title text (desktop only).
 
 ### Expenses (`/t/<slug>/expenses`)
 
-A teal-tinted summary card ("Total spent", the amount at 4xl in the display serif, "25 expenses · 11 people"), the filter chip row, then expenses grouped by day under a heading with the day's subtotal. A row is a 64px tap target: category badge, description, "Paid by X · split among N", amount. A floating saffron "Add expense" pill sits just above the tab bar at the right edge, and the list has bottom padding so the last row is never hidden behind it.
+A teal-tinted summary card ("Total spent", the amount at 4xl in the display serif, "25 expenses · 11 people", and an inline saffron "Add expense" button), the filter chip row, then expenses grouped by day under a heading with the day's subtotal. A row is a 64px tap target: category badge, description, "Paid by X · split among N", amount. A floating saffron "Add expense" pill sits just above the tab bar at the right edge, but only once the inline button has scrolled out of view and not while the user scrolls down (it is `inert` while hidden); the list has bottom padding so the last row is never hidden behind it.
 
 ### Add or edit expense (`/t/<slug>/expenses/new`, `/expenses/<id>`)
 
-A full page, not a sheet, with a back button and a slim header. Cards in order: amount (₹ sign, 4xl number, a formatted echo underneath, then "What was it for?"); category tiles, then Paid by and Date selects side by side; Split. The split card has a segmented control (Equally, Exact, Shares), a one-line hint per mode, All and None chips, and one row per member with a checkbox, avatar and name. The right side of each row changes by mode: the person's amount (Equally), an amount field (Exact), or minus and plus buttons around a count (Shares), with the per-head amount under the name. Exact mode adds a live line ("₹X left to assign", "₹X over the total", "All assigned") and a "Fill evenly" chip. A sticky bottom bar shows any error and the saffron button "Add expense · ₹4,180" (or "Save changes"). Edit mode adds a red delete icon beside the title.
+A full page, not a sheet, with a back button and a slim header. Cards in order: amount (₹ sign, 4xl number, an error line only when the text is not an amount, then "What was it for?"); category tiles, then Paid by and Date selects side by side; Split. The split card has a segmented control (Equally, Exact, Shares), a one-line hint per mode, All and None chips, and one row per member with a checkbox, avatar and name. The right side of each row changes by mode: the person's amount (Equally), an amount field (Exact), or minus and plus buttons around a count (Shares), with the per-head amount under the name. Exact mode adds a live line ("₹X left to assign", "₹X over the total", "All assigned") and a "Fill evenly" chip. A sticky bottom bar shows any error and the saffron button "Add expense · ₹4,180" (or "Save changes"). Edit mode adds a red delete icon beside the title.
 
 ### Settle (`/t/<slug>/settle`)
 
-"Balances": a card list, one row per person with avatar, name, a pill ("gets back ₹N" green, "owes ₹N" orange, "settled up" grey) and a muted "Paid ₹X · Share ₹Y". Then "N payments settle everyone": a card per transfer with two overlapping avatars, "Payer → Receiver", the amount in saffron serif, and a copy icon button; if the receiver has a UPI id there is a small "Pay via UPI" button. Below, two buttons: "Copy all" and a WhatsApp-green "Send on WhatsApp", then a note that this is the fewest payments and where UPI ids are added.
+"Balances": a card list, one row per person with avatar, name, a pill ("gets back ₹N" green, "owes ₹N" orange, "settled up" grey) and a muted "Paid ₹X · Share ₹Y". Then "N payments settle everyone": a card per transfer with two overlapping avatars, "Payer → Receiver", the amount in bold ink sans, and a copy icon button; if the receiver has a UPI id there is a small "Pay via UPI" button. Below, two buttons: "Copy all" and a WhatsApp-green "Send on WhatsApp", then a note that this is the fewest payments and where UPI ids are added.
 
 ### Summary (`/t/<slug>/summary`)
 
-Three stat tiles in one row (Total spend teal, Per head saffron, Expenses neutral). "Where the money went": a donut with the total in the centre, then labelled category bars with amount and percentage. "Per person": a bar for each member's share with a saffron tick for what they paid and a "Paid ₹X" note. "Per day": a bar per day.
+Three stat tiles: Total spend (teal) spans a full row with a 3xl figure, then Per head (saffron) and Expenses (neutral) side by side. "Where the money went": a donut with the total in the centre, then labelled category bars with amount and percentage. "Per person": a bar for each member's share with a saffron tick for what they paid and a "Paid ₹X" note. "Per day": a bar per day.
 
 ### People (`/t/<slug>/people`)
 
@@ -157,10 +157,9 @@ Contrast, computed with the WCAG formula from the token values (4.5 is the AA mi
 | "owes" red on its pill background | 4.23 (small, bold) |
 | "gets back" green on its pill background | 4.35 (small, bold) |
 | Muted on `--card-soft` | 4.46 |
-| Saffron text `#c97a06` on white (transfer amounts) | 3.35 |
 | Saffron text `#c97a06` on `--accent-soft` ("Per head" tile) | 2.8 |
 
-Known gaps: the two saffron-text pairs, the two pill pairs and muted text on `--card-soft` are below 4.5 in light mode (dark mode passes everywhere, lowest 6.5). Sheets do not trap focus or return it to the trigger. Vote chips explain who voted only through a `title`, which touch screens do not show. A few controls are 36px tall instead of 44px (the "Pay via UPI" button, and the All, None and Fill evenly chips). The split mode `tablist` has no matching `tabpanel`. There is no skip link.
+Known gaps: the saffron text on the "Per head" tile, the two pill pairs and muted text on `--card-soft` are below 4.5 in light mode (dark mode passes everywhere, lowest 6.5). Sheets do not trap focus or return it to the trigger. Vote chips explain who voted only through a `title`, which touch screens do not show. A few controls are 36px tall instead of 44px (the "Pay via UPI" button, and the All, None and Fill evenly chips). The split mode `tablist` has no matching `tabpanel`. There is no skip link.
 
 ## Copy tone
 
@@ -175,4 +174,4 @@ Plain, friendly, a little playful, never jokey about money. Short sentences, sec
 | "Debt simplification" | "4 payments settle everyone" |
 | "No records" | "Nothing here yet" |
 
-Buttons start with a verb ("Lock it in", "Add plan", "Copy all", "Send on WhatsApp"). The trip share message is "Join our trip <name> on Tripsplit: <url>". Demo people and places are real-feeling but made up, with no UPI ids.
+Buttons start with a verb ("Lock in", "Add plan", "Copy all", "Send on WhatsApp"). The trip share message is "Join our trip <name> on Tripsplit: <url>". Demo people and places are real-feeling but made up, with no UPI ids.

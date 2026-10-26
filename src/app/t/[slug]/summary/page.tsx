@@ -32,29 +32,34 @@ async function SummaryContent({ params }: { params: PageProps<"/t/[slug]/summary
   const memberById = new Map(trip.members.map((m) => [m.id, m]));
 
   const stats = [
-    { label: "Total spend", value: formatINR(summary.totalPaise), tone: "bg-primary-soft text-primary-deep" },
-    { label: "Per head", value: formatINR(summary.averagePerHeadPaise), tone: "bg-accent-soft text-accent-deep" },
-    { label: "Expenses", value: String(summary.expenseCount), tone: "bg-card-soft text-ink" },
+    { label: "Total spend", value: formatINR(summary.totalPaise), tone: "col-span-2 bg-primary-soft text-primary-deep", size: "text-3xl" },
+    { label: "Per head", value: formatINR(summary.averagePerHeadPaise), tone: "bg-accent-soft text-accent-deep", size: "text-xl" },
+    { label: "Expenses", value: String(summary.expenseCount), tone: "bg-card-soft text-ink", size: "text-xl" },
   ];
 
-  const categoryRows = CATEGORIES.map((key) => ({
-    key,
-    value: summary.byCategory[key],
-    color: CATEGORY_META[key].color,
-    label: (
-      <>
-        <span aria-hidden="true">{CATEGORY_META[key].emoji}</span> {CATEGORY_META[key].label}
-      </>
-    ),
-  }));
+  const categoryRows = CATEGORIES.map((key) => {
+    const { Icon, label, color } = CATEGORY_META[key];
+    return {
+      key,
+      value: summary.byCategory[key],
+      color,
+      label: (
+        <>
+          <Icon width={18} height={18} className="shrink-0" />
+          {label}
+        </>
+      ),
+    };
+  });
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* Total spend gets a full row; two columns keep "Per head" clear of the tile edge at 375px. */}
+      <div className="grid grid-cols-2 gap-2.5">
         {stats.map((s) => (
-          <div key={s.label} className={`rounded-2xl p-3 ${s.tone}`}>
+          <div key={s.label} className={`min-w-0 rounded-2xl p-3 ${s.tone}`}>
             <p className="text-[11px] font-bold uppercase tracking-wide opacity-75">{s.label}</p>
-            <p className="mt-1 font-display text-xl font-semibold leading-tight tabular-nums">{s.value}</p>
+            <p className={`mt-1 break-words font-display font-semibold leading-tight tabular-nums ${s.size}`}>{s.value}</p>
           </div>
         ))}
       </div>

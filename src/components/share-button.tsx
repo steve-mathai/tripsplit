@@ -28,7 +28,7 @@ export function ShareButton({ slug, tripName }: { slug: string; tripName: string
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="btn bg-white/15 text-white ring-1 ring-white/30 backdrop-blur">
+      <button type="button" onClick={() => setOpen(true)} className="btn bg-white text-hero shadow-sm">
         <ShareIcon width={18} height={18} />
         Share
       </button>
