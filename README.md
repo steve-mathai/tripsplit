@@ -186,3 +186,9 @@ drizzle/        generated SQL migrations
   until you reload. Polling or server-sent events would fix that.
 - **Receipt photos and quick add.** Snap the bill, or type "450 chai Meera" into one box.
 - **Optional trip PIN** for groups that don't want an open link floating around.
+
+## Copyright
+
+© 2026 Steve Mathai Mathew. All rights reserved. See [LICENSE](LICENSE).
+
+The photographs in `public/photos/` are by their credited creators under Creative Commons licences; see `public/photos/credits.json`.

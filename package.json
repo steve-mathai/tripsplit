@@ -2,6 +2,8 @@
   "name": "trip-splitter",
   "version": "0.1.0",
   "private": true,
+  "author": "Steve Mathai Mathew",
+  "license": "UNLICENSED",
   "engines": {
     "node": ">=20.9"
   },
@@ -20,7 +22,7 @@
     "@electric-sql/pglite": "^0.5.11",
     "@neondatabase/serverless": "^1.2.0",
     "drizzle-orm": "^0.45.4",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
@@ -31,7 +33,7 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

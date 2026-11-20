@@ -42,6 +42,17 @@ describe("toUserError", () => {
     expect(toUserError(wrapped("22007"))?.message).toMatch(/date/);
   });
 
+  it("maps NUL and other bad-text failures to a friendly message", () => {
+    expect(toUserError(wrapped("22021"))?.message).toBe("That text has characters we cannot save");
+    expect(toUserError(raw("22P05"))?.message).toMatch(/characters we cannot save/);
+  });
+
+  it("gives any other data exception or integrity violation a generic message", () => {
+    for (const code of ["22001", "22P02", "23502", "23514"]) {
+      expect(toUserError(wrapped(code))?.message).toMatch(/could not be saved/);
+    }
+  });
+
   it("returns null for errors that are real bugs", () => {
     expect(toUserError(new TypeError("x"))).toBeNull();
     expect(toUserError(wrapped("42P01"))).toBeNull();

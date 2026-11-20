@@ -1,0 +1,11 @@
+© 2026 Steve Mathai Mathew. All rights reserved.
+
+This software and its source code, documentation, designs, logos and other
+assets are the property of Steve Mathai Mathew. No licence is granted to copy,
+modify, distribute, sublicense or use any part of it, in whole or in part, for
+any purpose without prior written permission from the copyright holder.
+
+Third-party components keep their own licences: the npm dependencies listed in
+package.json, the Manrope typeface (SIL Open Font License 1.1), and the
+photographs in public/photos/, whose creators and Creative Commons licences
+are recorded in public/photos/credits.json and credited on the landing page.

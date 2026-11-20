@@ -156,7 +156,7 @@ Tripsplit has no analytics in v1. The table says what a real group would show an
 | --- | --- | --- |
 | Anyone with the link can edit or delete anything | A prankster, a leaked link or an honest mistake can wreck the data, and there is no undo | Accepted for v1 and stated on the landing page. Mitigations are phase 12 (change log, undo) and 13 (PIN). |
 | Open demo trip | `/t/kochi-2026` is public and editable by every visitor | Re-running `npm run db:seed` resets it. Decide before deploying whether to keep it public. |
-| Slug is the secret | Generated slugs have about 28.6 million combinations per stem (31 characters, 5 positions), and there is no rate limiting | Fine for friends, not for sensitive data. The demo slug is fixed and known. |
+| Slug is the secret | Generated slugs carry a 16 character random suffix (about 79 bits) and writes are rate limited per IP | Fine for friends, not for sensitive data. The demo slug is fixed and known. |
 | Cookie identity is per browser | WhatsApp may open links in an in-app browser that does not share cookies with Chrome or Safari, so a friend may be asked "Who are you?" again | Open question. Test on both Android and iOS once deployed. |
 | Rounding drift | A payment of ₹6,772.44 is not what people send on UPI | Phase 11 (round to whole rupees) |
 | Concurrent edits | Two people saving at once, or editing a stale page, is last write wins; other phones only see changes after a reload | Phase 10 (live updates) |

@@ -25,7 +25,7 @@ export async function copyText(text: string): Promise<boolean> {
 export function CopyButton({
   text,
   label = "Copy",
-  className = "btn-ghost",
+  className = "btn-secondary",
   iconOnly = false,
 }: {
   text: string;
@@ -45,15 +45,21 @@ export function CopyButton({
 
   if (iconOnly) {
     return (
-      <button
-        type="button"
-        onClick={handleClick}
-        aria-label={copied ? "Copied" : label}
-        title={copied ? "Copied" : label}
-        className={`${className} ${copied ? "!border-good !bg-good-soft !text-good" : ""}`}
-      >
-        {copied ? <CheckIcon width={18} height={18} /> : <CopyIcon width={18} height={18} />}
-      </button>
+      <>
+        <button
+          type="button"
+          onClick={handleClick}
+          aria-label={copied ? "Copied" : label}
+          title={copied ? "Copied" : label}
+          className={`${className} ${copied ? "!bg-positive-bg !text-positive-ink" : ""}`}
+        >
+          {copied ? <CheckIcon width={18} height={18} /> : <CopyIcon width={18} height={18} />}
+        </button>
+        {/* A separate live region, because a changing aria-label on a button is not reliably announced. */}
+        <span className="sr-only" aria-live="polite">
+          {copied ? "Copied" : ""}
+        </span>
+      </>
     );
   }
 

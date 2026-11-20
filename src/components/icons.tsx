@@ -2,7 +2,7 @@ import type { ReactNode, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
-// All icons are 24x24 stroke icons drawn inline so there is no icon font to load.
+// All icons are 24x24 stroke icons (1.75 stroke, currentColor) drawn inline so there is no icon font to load.
 function Icon({ children, ...props }: IconProps & { children: ReactNode }) {
   return (
     <svg
@@ -11,7 +11,7 @@ function Icon({ children, ...props }: IconProps & { children: ReactNode }) {
       height="22"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -21,6 +21,19 @@ function Icon({ children, ...props }: IconProps & { children: ReactNode }) {
     </svg>
   );
 }
+
+/**
+ * The product mark: the balance river reduced to four people around a zero line. Two get back (bars right),
+ * two owe (bars left), and both sides add up to the same length. Drawn on a 32 grid (see brand/README.md).
+ * Filled, so it takes currentColor as fill.
+ */
+export const MarkIcon = (p: IconProps) => (
+  <svg viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true" {...p}>
+    <path d="M17 1h12.5A1.5 1.5 0 0 1 31 2.5v3A1.5 1.5 0 0 1 29.5 7H17ZM17 9h4.5A1.5 1.5 0 0 1 23 10.5v3a1.5 1.5 0 0 1-1.5 1.5H17Z" />
+    <path d="M15 17v6h-4.5A1.5 1.5 0 0 1 9 21.5v-3a1.5 1.5 0 0 1 1.5-1.5ZM15 25v6H2.5A1.5 1.5 0 0 1 1 29.5v-3A1.5 1.5 0 0 1 2.5 25Z" />
+    <path d="M15 0h2v32h-2Z" />
+  </svg>
+);
 
 export const MapIcon = (p: IconProps) => (
   <Icon {...p}>
@@ -113,6 +126,54 @@ export const ArrowRightIcon = (p: IconProps) => (
 export const ChevronLeftIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="m15 5-7 7 7 7" />
+  </Icon>
+);
+
+export const ChevronRightIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m9 5 7 7-7 7" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m5 9 7 7 7-7" />
+  </Icon>
+);
+
+export const ChevronUpIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m5 15 7-7 7 7" />
+  </Icon>
+);
+
+export const ReceiptIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 3.5h12a1 1 0 0 1 1 1V20l-2.5-1.6L14 20l-2-1.6L10 20l-2.5-1.6L5 20V4.5a1 1 0 0 1 1-1Z" />
+    <path d="M9 8.5h6M9 12h6" />
+  </Icon>
+);
+
+/** A generic chat bubble. The WhatsApp brand colour belongs on WhatsAppIcon, not here. */
+export const ChatIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-7.5L7 20.5v-4H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5Z" />
+    <path d="M8 9.5h8M8 12.5h5" />
+  </Icon>
+);
+
+export const SettingsIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+    <circle cx="15" cy="7" r="2" />
+    <circle cx="9" cy="17" r="2" />
+  </Icon>
+);
+
+export const EditIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17l-1 3Z" />
+    <path d="m14.5 7.5 3 3" />
   </Icon>
 );
 

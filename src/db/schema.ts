@@ -119,3 +119,10 @@ export const expenseSplits = pgTable(
     check("expense_splits_weight_check", sql`${t.weight} >= 0`),
   ],
 );
+
+// Fixed-window request counters. `key` is a SHA-256 hash (see lib/rate-limit.ts), never a raw IP.
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+  count: integer("count").notNull(),
+});

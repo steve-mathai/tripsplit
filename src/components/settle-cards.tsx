@@ -3,7 +3,7 @@
 import { formatINR } from "@/lib/money";
 import { Avatar } from "./avatar";
 import { CopyButton } from "./copy-button";
-import { ArrowRightIcon, UpiIcon, WhatsAppIcon } from "./icons";
+import { UpiIcon, WhatsAppIcon } from "./icons";
 
 export interface SettleParty {
   id: string;
@@ -37,27 +37,32 @@ export function upiLink(line: SettleLine, tripName: string): string | null {
   return `upi://pay?${query.toString().replace(/\+/g, "%20").replace(/%40/g, "@")}`;
 }
 
+/** One payment row. Rendered inside the payments card (a `ul` with row rules), so it draws no card of its own. */
 export function TransferCard({ line, tripName }: { line: SettleLine; tripName: string }) {
   const upi = upiLink(line, tripName);
   return (
-    <li className="card flex items-center gap-2.5 py-2 pl-3 pr-2">
-      <div className="flex shrink-0 items-center -space-x-1">
-        <Avatar name={line.from.name} color={line.from.color} size="sm" />
-        <Avatar name={line.to.name} color={line.to.color} size="sm" />
+    <li className="flex items-center gap-3 py-3 pl-4 pr-2">
+      <div className="flex shrink-0 items-center -space-x-1" aria-hidden="true">
+        <Avatar name={line.from.name} color={line.from.color} size="sm" className="ring-2 ring-surface" />
+        <Avatar name={line.to.name} color={line.to.color} size="sm" className="ring-2 ring-surface" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] leading-snug">
-          <span className="font-bold">{line.from.name}</span> <ArrowRightIcon width={14} height={14} className="inline text-muted" />{" "}
-          <span className="font-bold">{line.to.name}</span>
+        <p className="min-w-0 text-base [overflow-wrap:anywhere]">
+          <span className="font-semibold">{line.from.name}</span> pays <span className="font-semibold">{line.to.name}</span>
         </p>
+        {/* Phones: the amount sits under the names, so a long pair of names keeps the full column instead of ~100px. */}
+        <p className="num mt-0.5 text-base font-semibold sm:hidden">{formatINR(line.amountPaise)}</p>
         {upi && (
-          <a href={upi} className="btn-soft mt-1 !min-h-9 !gap-1.5 !px-3 text-xs">
-            <UpiIcon width={14} height={14} />
-            Pay via UPI
+          <a
+            href={upi}
+            className="-my-2 inline-flex min-h-11 max-w-full items-center gap-1.5 text-sm font-medium text-accent-ink underline-offset-2 hover:underline"
+          >
+            <UpiIcon width={14} height={14} className="shrink-0" />
+            <span className="min-w-0 [overflow-wrap:anywhere]">Pay {formatINR(line.amountPaise)} via UPI</span>
           </a>
         )}
       </div>
-      <p className="shrink-0 text-base font-bold tabular-nums text-ink">{formatINR(line.amountPaise)}</p>
+      <p className="num hidden shrink-0 text-base font-semibold sm:block">{formatINR(line.amountPaise)}</p>
       <CopyButton text={transferLine(line)} label={`Copy ${transferLine(line)}`} iconOnly className="btn-ghost !h-11 !w-11 shrink-0 !px-0" />
     </li>
   );
@@ -66,10 +71,10 @@ export function TransferCard({ line, tripName }: { line: SettleLine; tripName: s
 export function SettleAllActions({ lines, tripName }: { lines: SettleLine[]; tripName: string }) {
   const text = [`${tripName} - settle up`, ...lines.map(transferLine)].join("\n");
   return (
-    <div className="mt-4 grid grid-cols-2 gap-2.5">
-      <CopyButton text={text} label="Copy all" className="btn-soft" />
-      <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="btn bg-[#25d366] text-[#052e16]">
-        <WhatsAppIcon width={20} height={20} />
+    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <CopyButton text={text} label="Copy all" className="btn-primary" />
+      <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+        <WhatsAppIcon width={20} height={20} className="text-whatsapp" />
         Send on WhatsApp
       </a>
     </div>

@@ -51,7 +51,7 @@ export function IdentityProvider({
       {children}
       {pickerOpen && !currentMemberId && (
         <Sheet title="Who are you?" onClose={() => setPickerOpen(false)}>
-          <p className="mb-3 text-sm text-muted">Pick your name to vote and react. This is remembered on this phone only.</p>
+          <p className="mb-4 text-sm text-muted">Pick your name to vote and react. This is remembered on this phone only.</p>
           <IdentityPicker slug={slug} members={members} onDone={() => setPickerOpen(false)} />
         </Sheet>
       )}
@@ -68,7 +68,7 @@ export function IdentityPicker({
   slug: string;
   members: IdentityMember[];
   onDone?: () => void;
-  /** Single horizontally scrolling row (compact banner) instead of wrapping chips. */
+  /** Single horizontally scrolling row (compact banner) instead of a grid. */
   scrollRow?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
@@ -103,14 +103,27 @@ export function IdentityPicker({
 
   return (
     <div className={pending ? "opacity-60" : ""}>
-      <div className={scrollRow ? "chip-row -mx-4 flex gap-2 px-4" : "flex flex-wrap gap-2"}>
+      <div className={scrollRow ? "chip-row -mx-4 flex gap-2 px-4" : "grid grid-cols-2 gap-2 sm:grid-cols-3"}>
         {members.map((m) => (
-          <button key={m.id} type="button" disabled={pending} onClick={() => choose(m.id)} className="chip shrink-0 !pl-2">
+          <button
+            key={m.id}
+            type="button"
+            disabled={pending}
+            onClick={() => choose(m.id)}
+            title={m.name}
+            className={`chip !justify-start !pl-1.5 ${scrollRow ? "max-w-[85vw] shrink-0" : "min-w-0"}`}
+          >
             <Avatar name={m.name} color={m.color} size="sm" />
-            {m.name}
+            <span className="min-w-0 truncate">{m.name}</span>
           </button>
         ))}
-        <button type="button" onClick={() => setAdding((v) => !v)} data-active={adding} className="chip shrink-0 border-dashed text-muted">
+        <button
+          type="button"
+          onClick={() => setAdding((v) => !v)}
+          aria-expanded={adding}
+          data-active={adding}
+          className={`chip text-muted ${scrollRow ? "shrink-0" : "min-w-0"}`}
+        >
           I&apos;m not on the list
         </button>
       </div>
@@ -126,18 +139,22 @@ export function IdentityPicker({
             className="field"
             placeholder="Your name"
             aria-label="Your name"
+            name="name"
+            autoComplete="off"
+            autoCapitalize="words"
+            enterKeyHint="done"
             value={name}
             maxLength={40}
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
-          <button type="submit" disabled={pending || !name.trim()} className="btn-primary shrink-0">
-            Join
+          <button type="submit" disabled={pending || !name.trim()} className="btn-secondary shrink-0">
+            {pending ? "Joining…" : "Join"}
           </button>
         </form>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-bad">
+        <p role="alert" className="mt-2 text-sm font-medium text-negative">
           {error}
         </p>
       )}
@@ -149,10 +166,9 @@ export function IdentityBanner({ slug, members }: { slug: string; members: Ident
   // The expense form pages default "Paid by" to the current member instead of nagging for a name.
   if (isExpenseFormRoute(tripSubpath(usePathname(), slug))) return null;
   return (
-    <section className="card mb-4 overflow-hidden border-accent/50 bg-accent-soft/60 px-4 py-3" aria-label="Who are you?">
-      <h2 className="mb-2 text-sm font-bold">
-        Who are you? <span className="font-medium text-muted">Tap your name to vote and pay as yourself.</span>
-      </h2>
+    <section className="card mb-4 overflow-hidden p-4" aria-label="Who are you?">
+      <h2 className="text-base font-semibold">Who are you?</h2>
+      <p className="mb-3 mt-0.5 text-sm text-muted">Tap your name to vote and pay as yourself.</p>
       <IdentityPicker slug={slug} members={members} scrollRow />
     </section>
   );

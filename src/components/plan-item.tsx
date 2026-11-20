@@ -40,17 +40,24 @@ function applyChange(item: PlanItemView, change: Change): PlanItemView {
   };
 }
 
+/**
+ * One row of a day card. A plan renders as a row on the 64px time column; an option renders as a
+ * vote row (title, tally, vote pills) and expects to sit inside the vote panel the plan page draws.
+ */
 export function PlanItemCard({
   slug,
   item,
   memberNames,
-  grouped = false,
+  memberCount,
+  rivalYes = null,
 }: {
   slug: string;
   item: PlanItemView;
   memberNames: Record<string, string>;
-  /** Inside a "Vote" group on the plan page, whose header already says these are options. */
-  grouped?: boolean;
+  /** Everyone on the trip: the denominator of the tally. */
+  memberCount: number;
+  /** Most yes votes among the other options in the same slot; null when this option stands alone. */
+  rivalYes?: number | null;
 }) {
   const { currentMemberId, requireIdentity } = useIdentity();
   const [optimisticItem, addOptimistic] = useOptimistic(item, applyChange);
@@ -69,8 +76,13 @@ export function PlanItemCard({
     ? (optimisticItem.reactions.find((r) => r.memberIds.includes(currentMemberId))?.emoji ?? null)
     : null;
 
-  // A plain item with no reactions has no chips, so its add-reaction button moves up beside delete instead of taking a row.
-  const hasChipRow = isOption || optimisticItem.reactions.length > 0;
+  const yes = optimisticItem.upMemberIds.length;
+  const no = optimisticItem.downMemberIds.length;
+  const yesShare = memberCount > 0 ? Math.min(100, (yes / memberCount) * 100) : 0;
+  const leading = rivalYes !== null && yes > 0 && yes > rivalYes;
+
+  // A plain plan with no reactions has no chip row, so its add-reaction button sits beside delete instead of taking a row.
+  const reactionsInChipRow = optimisticItem.reactions.length > 0;
 
   const namesOf = (ids: string[]) => ids.map((id) => memberNames[id] ?? "Someone").join(", ");
 
@@ -105,135 +117,154 @@ export function PlanItemCard({
     run(null, () => deletePlanItemAction(slug, item.id));
   }
 
-  return (
-    <li className={`card relative p-4 ${isOption && !grouped ? "border-accent/60 bg-accent-soft/30" : ""} ${pending ? "opacity-80" : ""}`}>
-      <div className="flex items-start gap-3">
-        <div className="w-16 shrink-0 pt-0.5 text-sm font-bold tabular-nums text-primary-deep">
-          {optimisticItem.time ? formatTime12(optimisticItem.time) : <span className="font-medium text-muted">Any time</span>}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            {isOption && !grouped && (
-              <span className="rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-[#3a2200]">
-                Option
-              </span>
-            )}
-            <h3 className="text-base font-bold leading-snug">{optimisticItem.title}</h3>
-          </div>
-          {optimisticItem.notes && <p className="mt-1 text-sm text-muted">{optimisticItem.notes}</p>}
-        </div>
-        <div className="-mr-2 -mt-2 flex shrink-0">
-          {!hasChipRow && (
-            <button
-              type="button"
-              aria-expanded={picking}
-              aria-label="Add reaction"
-              onClick={() => setPicking((open) => !open)}
-              className={`flex h-11 w-11 items-center justify-center rounded-full transition hover:text-ink ${picking ? "text-primary-deep" : "text-muted"}`}
-            >
-              <SmilePlusIcon width={18} height={18} />
-            </button>
-          )}
-          <button type="button" onClick={remove} aria-label={`Delete ${item.title}`} className="flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:text-bad">
-            <TrashIcon width={18} height={18} />
-          </button>
-        </div>
-      </div>
+  const addReactionButton = (
+    <button
+      type="button"
+      aria-expanded={picking}
+      aria-label="Add reaction"
+      onClick={() => setPicking((open) => !open)}
+      className={`btn-ghost !w-11 !px-0 ${picking ? "!bg-active text-text" : "text-muted"}`}
+    >
+      <SmilePlusIcon width={18} height={18} />
+    </button>
+  );
 
-      {hasChipRow && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {isOption && (
-            <>
-              <button
-                type="button"
-                aria-pressed={myVote === "up"}
-                aria-label={`Vote yes, ${optimisticItem.upMemberIds.length} so far`}
-                data-active={myVote === "up"}
-                title={namesOf(optimisticItem.upMemberIds)}
-                onClick={() => vote("up")}
-                className="chip !px-3 data-[active=true]:!border-good data-[active=true]:!bg-good-soft data-[active=true]:!text-good"
-              >
-                <ThumbUpIcon width={18} height={18} />
-                <span className="tabular-nums">{optimisticItem.upMemberIds.length}</span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={myVote === "down"}
-                aria-label={`Vote no, ${optimisticItem.downMemberIds.length} so far`}
-                data-active={myVote === "down"}
-                title={namesOf(optimisticItem.downMemberIds)}
-                onClick={() => vote("down")}
-                className="chip !px-3 data-[active=true]:!border-bad data-[active=true]:!bg-bad-soft data-[active=true]:!text-bad"
-              >
-                <ThumbDownIcon width={18} height={18} />
-                <span className="tabular-nums">{optimisticItem.downMemberIds.length}</span>
-              </button>
-            </>
-          )}
-          {/* Only reactions someone has made show as chips; the rest hide behind the add-reaction button. */}
-          {optimisticItem.reactions.map((reaction) => (
-            <button
-              key={reaction.emoji}
-              type="button"
-              aria-pressed={myEmoji === reaction.emoji}
-              aria-label={`React ${reaction.emoji}`}
-              data-active={myEmoji === reaction.emoji}
-              title={namesOf(reaction.memberIds)}
-              onClick={() => react(reaction.emoji)}
-              className="chip !px-2"
-            >
-              <span className="text-base leading-none">{reaction.emoji}</span>
-              <span className="text-xs font-bold tabular-nums">{reaction.memberIds.length}</span>
-            </button>
-          ))}
+  const deleteButton = (
+    <button
+      type="button"
+      onClick={remove}
+      aria-label={`Delete ${item.title}`}
+      className="btn-ghost !w-11 !px-0 text-muted hover:!text-negative"
+    >
+      <TrashIcon width={18} height={18} />
+    </button>
+  );
+
+  // Only reactions someone has made show as chips; the rest hide behind the add-reaction button.
+  const reactionChips = optimisticItem.reactions.map((reaction) => (
+    <button
+      key={reaction.emoji}
+      type="button"
+      aria-pressed={myEmoji === reaction.emoji}
+      aria-label={`React ${reaction.emoji}, ${reaction.memberIds.length} so far`}
+      title={namesOf(reaction.memberIds)}
+      onClick={() => react(reaction.emoji)}
+      // The button is the 44px target; the pill inside is the quiet visual.
+      className="group inline-flex min-h-11 items-center transition-transform active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:transform-none"
+    >
+      <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-active px-2.5 text-text transition-colors group-aria-pressed:bg-accent-soft group-aria-pressed:text-accent-ink">
+        <span className="text-base leading-none">{reaction.emoji}</span>
+        <span className="num text-sm font-medium">{reaction.memberIds.length}</span>
+      </span>
+    </button>
+  ));
+
+  const picker = picking && (
+    <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Pick a reaction">
+      {EMOJIS.map((emoji) => (
+        <button
+          key={emoji}
+          type="button"
+          aria-pressed={myEmoji === emoji}
+          aria-label={`React ${emoji}`}
+          onClick={() => react(emoji)}
+          className="chip !w-11 !px-0 text-xl"
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+
+  const errorLine = error && (
+    <p role="alert" className="mt-2 text-sm font-semibold text-negative">
+      {error}
+    </p>
+  );
+
+  const notes = optimisticItem.notes && <p className="mt-0.5 [overflow-wrap:anywhere] text-sm text-muted">{optimisticItem.notes}</p>;
+  const timeLabel = optimisticItem.time ? formatTime12(optimisticItem.time) : <span className="text-muted">Any time</span>;
+
+  if (isOption) {
+    return (
+      <li className={`py-3 first:pt-0 last:pb-0 ${pending ? "opacity-80" : ""}`}>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <h4 className="[overflow-wrap:anywhere] text-base font-semibold leading-snug">{optimisticItem.title}</h4>
+            {notes}
+          </div>
+          <div className="-mr-2 -mt-2.5 shrink-0">{deleteButton}</div>
+        </div>
+
+        <div className="mt-2">
+          <div className="h-1.5 overflow-hidden rounded-full bg-active" aria-hidden="true">
+            <div className="h-full rounded-full bg-accent" style={{ width: `${yesShare}%` }} />
+          </div>
+          <p aria-live="polite" className="num mt-1.5 text-sm text-muted">
+            <span className={leading ? "font-semibold text-text" : undefined}>{yes} in</span>
+            {` · ${no} out of ${memberCount}`}
+          </p>
+        </div>
+
+        <div className="mt-1 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            aria-expanded={picking}
-            aria-label="Add reaction"
-            data-active={picking}
-            onClick={() => setPicking((open) => !open)}
-            className="chip !w-11 !px-0 text-muted"
+            aria-pressed={myVote === "up"}
+            aria-label={`Vote yes, ${yes} so far`}
+            title={namesOf(optimisticItem.upMemberIds)}
+            onClick={() => vote("up")}
+            className="chip !px-3 aria-pressed:!border-accent-soft aria-pressed:!bg-accent-soft aria-pressed:!text-accent-ink"
           >
-            <SmilePlusIcon width={20} height={20} />
+            <ThumbUpIcon width={18} height={18} />
+            <span className="num">{yes}</span>
           </button>
-          {isOption && (
-            <button
-              type="button"
-              onClick={lockIn}
-              disabled={pending}
-              aria-label={`Lock in ${item.title}`}
-              className="btn-soft ml-auto !px-4"
-            >
-              <LockIcon width={18} height={18} />
-              Lock in
-            </button>
+          <button
+            type="button"
+            aria-pressed={myVote === "down"}
+            aria-label={`Vote no, ${no} so far`}
+            title={namesOf(optimisticItem.downMemberIds)}
+            onClick={() => vote("down")}
+            className="chip !px-3 aria-pressed:!border-accent-soft aria-pressed:!bg-accent-soft aria-pressed:!text-accent-ink"
+          >
+            <ThumbDownIcon width={18} height={18} />
+            <span className="num">{no}</span>
+          </button>
+          {addReactionButton}
+          <button type="button" onClick={lockIn} disabled={pending} aria-label={`Lock in ${item.title}`} className="btn-secondary ml-auto !px-3.5">
+            <LockIcon width={16} height={16} />
+            Lock in
+          </button>
+        </div>
+        {reactionsInChipRow && <div className="flex flex-wrap items-center gap-x-2">{reactionChips}</div>}
+        {picker}
+        {errorLine}
+      </li>
+    );
+  }
+
+  return (
+    <li className={`px-4 py-3 ${pending ? "opacity-80" : ""}`}>
+      <div className="flex items-start gap-3">
+        {/* Tablet and up: a fixed time column. Phones: the time moves above the title so the title keeps ~80px more. */}
+        <div className="num hidden w-16 shrink-0 whitespace-nowrap pt-0.5 text-sm font-medium sm:block">{timeLabel}</div>
+        <div className="min-w-0 flex-1">
+          <p className="num mb-0.5 whitespace-nowrap text-sm font-medium sm:hidden">{timeLabel}</p>
+          <h3 className="[overflow-wrap:anywhere] text-base font-semibold leading-snug">{optimisticItem.title}</h3>
+          {notes}
+          {reactionsInChipRow && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-2">
+              {reactionChips}
+              {addReactionButton}
+            </div>
           )}
+          {picker}
+          {errorLine}
         </div>
-      )}
-
-      {picking && (
-        <div className="mt-2 flex gap-1.5" role="group" aria-label="Pick a reaction">
-          {EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              aria-pressed={myEmoji === emoji}
-              aria-label={`React ${emoji}`}
-              data-active={myEmoji === emoji}
-              onClick={() => react(emoji)}
-              className="chip !px-0 w-11 text-xl"
-            >
-              {emoji}
-            </button>
-          ))}
+        <div className="-mr-2 -mt-2.5 flex shrink-0">
+          {!reactionsInChipRow && addReactionButton}
+          {deleteButton}
         </div>
-      )}
-
-      {error && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-bad">
-          {error}
-        </p>
-      )}
+      </div>
     </li>
   );
 }

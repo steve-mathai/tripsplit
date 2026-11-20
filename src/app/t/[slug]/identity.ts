@@ -1,7 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-
-const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+import { identityCookieOptions } from "@/lib/cookie-options";
 
 const identityCookieName = (tripId: string) => `ts_${tripId}`;
 
@@ -11,11 +10,6 @@ export async function getCurrentMemberId(trip: { id: string; members: { id: stri
   return value && trip.members.some((m) => m.id === value) ? value : null;
 }
 
-export async function setIdentityCookie(tripId: string, memberId: string): Promise<void> {
-  (await cookies()).set(identityCookieName(tripId), memberId, {
-    path: "/",
-    maxAge: IDENTITY_COOKIE_MAX_AGE,
-    sameSite: "lax",
-    httpOnly: true,
-  });
+export async function setIdentityCookie(tripId: string, slug: string, memberId: string): Promise<void> {
+  (await cookies()).set(identityCookieName(tripId), memberId, identityCookieOptions(slug, process.env.NODE_ENV === "production"));
 }

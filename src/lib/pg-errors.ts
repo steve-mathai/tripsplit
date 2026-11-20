@@ -23,7 +23,8 @@ export function postgresErrorCode(error: unknown): string | undefined {
  * `uniqueMessage` says what a 23505 means for the statement that was running.
  */
 export function toUserError(error: unknown, uniqueMessage = "That already exists"): UserError | null {
-  switch (postgresErrorCode(error)) {
+  const code = postgresErrorCode(error);
+  switch (code) {
     case "23505":
       return new UserError(uniqueMessage);
     case "23503":
@@ -33,7 +34,12 @@ export function toUserError(error: unknown, uniqueMessage = "That already exists
       return new UserError("That date does not look right");
     case "22003":
       return new UserError("That number is too large");
+    case "22021": // invalid byte sequence, e.g. a NUL character in text
+    case "22P05":
+      return new UserError("That text has characters we cannot save");
     default:
-      return null;
+      // Any other data exception (class 22) or integrity violation (class 23) is caused by
+      // what the user sent, so it gets a generic message instead of a 500.
+      return /^2[23]/.test(code ?? "") ? new UserError("That could not be saved - check the details and try again") : null;
   }
 }

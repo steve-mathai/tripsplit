@@ -60,7 +60,7 @@ For anyone changing this repo, human or AI agent. Each rule is here because brea
 ## Environment and git
 
 35. On this Windows machine run `npm` and `npx` through PowerShell. Git Bash cannot find node for npm scripts. Template:
-    `powershell.exe -NoProfile -Command "$env:Path='C:\nvm4w\nodejs;'+$env:Path; Set-Location 'D:\Downloads\MATITHI\trip-splitter'; npm test"`
+    `powershell.exe -NoProfile -Command "$env:Path='C:\nvm4w\nodejs;'+$env:Path; Set-Location 'D:\Downloads\MATITHI\Build\trip-splitter'; npm test"`
 36. PGlite allows one process on `.data/`. Stop the dev server before `db:seed`, `db:migrate` or anything else that opens the database.
 37. Never commit `.env*` (except `.env.example`) or `.data/`. Both are in [.gitignore](../.gitignore); do not `git add -f` them.
 38. Commit as the personal GitHub account (`steve-mathai`). The repo-local git config is set to it; the machine default is the work account (`stevemathew-zuro`). Run `git config user.name` and `git config user.email` before committing, and do not change identity to make a command work.

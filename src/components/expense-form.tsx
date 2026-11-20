@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { deleteExpenseAction, saveExpenseAction } from "@/app/t/[slug]/actions";
 import { computeShares, validateSplit } from "@/lib/split";
@@ -9,7 +8,7 @@ import { CATEGORIES, SPLIT_MODES, type Category, type SplitMode } from "@/lib/ty
 import { Avatar } from "./avatar";
 import { CATEGORY_META } from "./categories";
 import { formatDayShort } from "./dates";
-import { ChevronLeftIcon, MinusIcon, PlusIcon, TrashIcon } from "./icons";
+import { MinusIcon, PlusIcon, TrashIcon } from "./icons";
 
 export interface FormMember {
   id: string;
@@ -159,251 +158,290 @@ export function ExpenseForm({
     });
   }
 
-  const backHref = `/t/${slug}/expenses`;
   const everyone = selected.size === members.length;
+  const amountUnreadable = Boolean(amountText) && amountPaise === null;
 
   return (
-    <div className="pb-40">
-      <div className="mb-4 flex items-center gap-2">
-        <Link href={backHref} aria-label="Back to expenses" className="btn-ghost !h-11 !w-11 !px-0">
-          <ChevronLeftIcon width={20} height={20} />
-        </Link>
-        <h1 className="font-display text-2xl font-semibold">{initial ? "Edit expense" : "Add expense"}</h1>
+    // pb-24 keeps the last field clear of the fixed save bar.
+    <div className="pb-24">
+      {/* The slim bar above (trip header) already carries the back link for this route. */}
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h1 className="min-w-0 truncate text-title">{initial ? "Edit expense" : "Add expense"}</h1>
         {initial && (
-          <button type="button" onClick={remove} disabled={pending} aria-label="Delete expense" className="btn-danger ml-auto !h-11 !w-11 !px-0">
-            <TrashIcon width={20} height={20} />
+          <button
+            type="button"
+            onClick={remove}
+            disabled={pending}
+            aria-label="Delete expense"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-negative transition-colors hover:bg-negative-bg disabled:opacity-50"
+          >
+            <TrashIcon width={18} height={18} aria-hidden="true" />
+            Delete
           </button>
         )}
       </div>
 
-      <div className="card mb-4 p-4">
-        <label className="label" htmlFor="amount">
-          Amount
-        </label>
-        <div className="flex items-center gap-2">
-          <span className="font-display text-3xl font-semibold text-accent-deep" aria-hidden="true">
-            ₹
-          </span>
-          <input
-            id="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            value={amountText}
-            onChange={(e) => setAmountText(e.target.value)}
-            className="field !border-0 !bg-transparent !px-1 font-display !text-4xl font-semibold !ring-0"
-          />
+      <div className="wide-2col items-start">
+        <div className="space-y-4">
+          <div className="card p-4">
+            <label className="label" htmlFor="amount">
+              Amount
+            </label>
+            <div className="flex items-center gap-1">
+              <span className="text-lead text-muted" aria-hidden="true">
+                ₹
+              </span>
+              <input
+                id="amount"
+                name="amount"
+                inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint="next"
+                placeholder="0"
+                value={amountText}
+                onChange={(e) => setAmountText(e.target.value)}
+                aria-invalid={amountUnreadable}
+                aria-describedby={amountUnreadable ? "amount-error" : undefined}
+                className="num min-w-0 flex-1 rounded-panel bg-transparent py-1 text-lead text-text placeholder:text-muted"
+              />
+            </div>
+            {amountUnreadable && (
+              <p id="amount-error" className="mt-1 text-sm text-negative">
+                That does not look like an amount.
+              </p>
+            )}
+
+            <label className="label mt-4" htmlFor="description">
+              What was it for?
+            </label>
+            <input
+              id="description"
+              name="description"
+              autoComplete="off"
+              className="field"
+              placeholder="Kerala meals, auto to fort, tea…"
+              value={description}
+              maxLength={80}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="card p-4">
+            <span className="label" id="category-label">
+              Category
+            </span>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-labelledby="category-label">
+              {CATEGORIES.map((key) => {
+                const { Icon, label, tint, ink } = CATEGORY_META[key];
+                const isSelected = category === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setCategory(key)}
+                    // The 2px border is always present (transparent when unselected) so selecting never shifts the layout.
+                    style={{ backgroundColor: tint, color: ink, borderColor: isSelected ? ink : "transparent" }}
+                    className="flex min-h-14 min-w-0 flex-row items-center justify-start gap-2 rounded-panel border-2 px-3 text-sm font-medium transition-colors active:scale-[0.98] motion-reduce:active:scale-100 sm:min-h-[4.5rem] sm:flex-col sm:justify-center sm:gap-1.5 sm:px-1"
+                  >
+                    <Icon width={22} height={22} aria-hidden="true" className="shrink-0" />
+                    <span className="min-w-0 max-w-full truncate">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <label className="label" htmlFor="paid-by">
+                  Paid by
+                </label>
+                <select id="paid-by" name="paid-by" className="select" value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="min-w-0">
+                <label className="label" htmlFor="day">
+                  Date
+                </label>
+                <select id="day" name="day" className="select" value={day} onChange={(e) => setDay(e.target.value)}>
+                  {days.map((d) => (
+                    <option key={d} value={d}>
+                      {formatDayShort(d)}
+                    </option>
+                  ))}
+                  <option value={NO_DAY}>No specific day</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
-        {amountText && amountPaise === null && <p className="mt-1 text-sm text-bad">That does not look like an amount.</p>}
 
-        <label className="label mt-4" htmlFor="description">
-          What was it for?
-        </label>
-        <input
-          id="description"
-          className="field"
-          placeholder="Kerala meals, auto to fort, tea..."
-          value={description}
-          maxLength={80}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-
-      <div className="card mb-4 p-4">
-        <span className="label">Category</span>
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Category">
-          {CATEGORIES.map((key) => {
-            const { Icon, label } = CATEGORY_META[key];
-            return (
+        <div className="card p-4">
+          <span className="label" id="split-label">
+            Split
+          </span>
+          <div className="mb-4 grid grid-cols-3 gap-1 rounded-full bg-neutral-bg p-1" role="radiogroup" aria-labelledby="split-label">
+            {SPLIT_MODES.map((key) => (
               <button
                 key={key}
                 type="button"
                 role="radio"
-                aria-checked={category === key}
-                data-active={category === key}
-                onClick={() => setCategory(key)}
-                className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-card text-xs font-semibold transition active:scale-95 data-[active=true]:border-primary data-[active=true]:bg-primary-soft data-[active=true]:text-primary-deep"
+                aria-checked={mode === key}
+                onClick={() => setMode(key)}
+                className="min-h-11 rounded-full border border-transparent text-sm font-semibold text-muted transition-colors aria-checked:border-border aria-checked:bg-surface aria-checked:text-text"
               >
-                <Icon width={26} height={26} />
-                {label}
+                {MODE_LABEL[key]}
               </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div>
-            <label className="label" htmlFor="paid-by">
-              Paid by
-            </label>
-            <select id="paid-by" className="field" value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+            ))}
           </div>
-          <div>
-            <label className="label" htmlFor="day">
-              Date
-            </label>
-            <select id="day" className="field" value={day} onChange={(e) => setDay(e.target.value)}>
-              {days.map((d) => (
-                <option key={d} value={d}>
-                  {formatDayShort(d)}
-                </option>
-              ))}
-              <option value={NO_DAY}>No specific day</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div className="card p-4">
-        <span className="label">Split</span>
-        <div className="mb-4 grid grid-cols-3 rounded-full bg-card-soft p-1" role="tablist" aria-label="Split mode">
-          {SPLIT_MODES.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={mode === key}
-              onClick={() => setMode(key)}
-              className="min-h-11 rounded-full text-sm font-semibold text-muted transition aria-selected:bg-card aria-selected:text-primary-deep aria-selected:shadow-sm"
-            >
-              {MODE_LABEL[key]}
-            </button>
-          ))}
-        </div>
-
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-sm text-muted">
-            {mode === "equal" && "Everyone ticked pays the same."}
-            {mode === "exact" && "Type what each person owes."}
-            {mode === "shares" && "Double share = double the bill."}
-          </p>
-          <div className="flex gap-1.5">
-            <button type="button" className="chip !min-h-9 !px-3 text-xs" data-active={everyone} onClick={() => setSelected(new Set(members.map((m) => m.id)))}>
-              All
-            </button>
-            <button type="button" className="chip !min-h-9 !px-3 text-xs" data-active={selected.size === 0} onClick={() => setSelected(new Set())}>
-              None
-            </button>
-          </div>
-        </div>
-
-        <ul className="divide-y divide-line">
-          {members.map((m) => {
-            const checked = selected.has(m.id);
-            const share = preview?.get(m.id);
-            return (
-              <li key={m.id} className="flex min-h-14 items-center gap-3 py-1.5">
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={checked}
-                  onClick={() => toggleMember(m.id)}
-                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
-                >
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition ${
-                      checked ? "border-primary bg-primary text-white" : "border-line"
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {checked && (
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m5 12.5 4.5 4.5L19 7.5" />
-                      </svg>
-                    )}
-                  </span>
-                  <Avatar name={m.name} color={m.color} size="sm" />
-                  <span className="min-w-0">
-                    <span className={`block truncate text-sm font-semibold ${checked ? "" : "text-muted"}`}>{m.name}</span>
-                    {/* Shares rows are full with the steppers, so the per-head amount sits under the name instead of at the right edge. */}
-                    {checked && mode === "shares" && share !== undefined && (
-                      <span className="block text-xs font-semibold tabular-nums text-primary-deep">{formatINR(share)}</span>
-                    )}
-                  </span>
-                </button>
-
-                {checked && mode === "exact" && (
-                  <div className="flex w-28 shrink-0 items-center gap-1">
-                    <span className="text-muted" aria-hidden="true">
-                      ₹
-                    </span>
-                    <input
-                      inputMode="decimal"
-                      aria-label={`Amount for ${m.name}`}
-                      aria-invalid={unreadableExactIds.includes(m.id)}
-                      placeholder="0"
-                      className="field !min-h-11 text-right aria-invalid:!border-bad aria-invalid:!ring-2 aria-invalid:!ring-bad/25"
-                      value={exactText[m.id] ?? ""}
-                      onChange={(e) => setExactText((current) => ({ ...current, [m.id]: e.target.value }))}
-                    />
-                  </div>
-                )}
-
-                {checked && mode === "shares" && (
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <button type="button" aria-label={`Fewer shares for ${m.name}`} onClick={() => bumpShares(m.id, -1)} className="btn-ghost !h-11 !w-11 !px-0">
-                      <MinusIcon width={18} height={18} />
-                    </button>
-                    <span className="w-6 text-center text-sm font-bold tabular-nums">{sharesCount[m.id] ?? 1}</span>
-                    <button type="button" aria-label={`More shares for ${m.name}`} onClick={() => bumpShares(m.id, 1)} className="btn-ghost !h-11 !w-11 !px-0">
-                      <PlusIcon width={18} height={18} />
-                    </button>
-                  </div>
-                )}
-
-                {checked && mode === "equal" && (
-                  <span className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums text-primary-deep">
-                    {share === undefined ? "" : formatINR(share)}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        {mode === "exact" && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p
-              aria-live="polite"
-              className={`text-sm font-bold ${exactProblem || exactLeft < 0 ? "text-bad" : exactLeft === 0 && amountPaise ? "text-good" : "text-accent-deep"}`}
-            >
-              {exactProblem ??
-                (!amountPaise
-                  ? "Enter the amount first"
-                  : exactLeft === 0
-                    ? "All assigned"
-                    : exactLeft > 0
-                      ? `${formatINR(exactLeft)} left to assign`
-                      : `${formatINR(-exactLeft)} over the total`)}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="min-w-0 text-sm text-muted">
+              {mode === "equal" && "Everyone ticked pays the same."}
+              {mode === "exact" && "Type what each person owes."}
+              {mode === "shares" && "Double share = double the bill."}
             </p>
-            <button type="button" className="chip !min-h-9 text-xs" onClick={fillExactEvenly} disabled={!amountPaise || selected.size === 0}>
-              Fill evenly
-            </button>
+            <div className="flex shrink-0 gap-1">
+              <button
+                type="button"
+                className="btn-ghost !px-3 aria-pressed:bg-active"
+                aria-pressed={everyone}
+                onClick={() => setSelected(new Set(members.map((m) => m.id)))}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                className="btn-ghost !px-3 aria-pressed:bg-active"
+                aria-pressed={selected.size === 0}
+                onClick={() => setSelected(new Set())}
+              >
+                None
+              </button>
+            </div>
           </div>
-        )}
 
-        {mode === "shares" && preview && (
-          <p className="mt-3 text-sm text-muted">
-            {splits.reduce((sum, s) => sum + s.weight, 0)} shares in total, previewed per person above.
-          </p>
-        )}
+          <ul className="divide-y divide-rule">
+            {members.map((m) => {
+              const checked = selected.has(m.id);
+              const share = preview?.get(m.id);
+              return (
+                <li key={m.id} className="flex min-h-14 items-center gap-3 py-1.5">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={checked}
+                    onClick={() => toggleMember(m.id)}
+                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-mark border-2 transition-colors ${
+                        checked ? "border-accent bg-accent text-surface" : "border-control"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {checked && (
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m5 12.5 4.5 4.5L19 7.5" />
+                        </svg>
+                      )}
+                    </span>
+                    <Avatar name={m.name} color={m.color} size="sm" />
+                    <span className="min-w-0">
+                      <span className={`line-clamp-2 block text-base font-medium [overflow-wrap:anywhere] ${checked ? "" : "text-muted"}`}>{m.name}</span>
+                      {/* Shares rows are full with the steppers, so the per-head amount sits under the name instead of at the right edge. */}
+                      {checked && mode === "shares" && share !== undefined && (
+                        <span className="num block text-sm text-muted">{formatINR(share)}</span>
+                      )}
+                    </span>
+                  </button>
+
+                  {checked && mode === "exact" && (
+                    <div className="flex w-32 shrink-0 items-center gap-1">
+                      <span className="text-muted" aria-hidden="true">
+                        ₹
+                      </span>
+                      <input
+                        inputMode="decimal"
+                        autoComplete="off"
+                        spellCheck={false}
+                        aria-label={`Amount for ${m.name}`}
+                        aria-invalid={unreadableExactIds.includes(m.id)}
+                        placeholder="0"
+                        className="field num !px-2 text-right"
+                        value={exactText[m.id] ?? ""}
+                        onChange={(e) => setExactText((current) => ({ ...current, [m.id]: e.target.value }))}
+                      />
+                    </div>
+                  )}
+
+                  {checked && mode === "shares" && (
+                    <div className="flex shrink-0 items-center">
+                      <button type="button" aria-label={`Fewer shares for ${m.name}`} onClick={() => bumpShares(m.id, -1)} className="btn-ghost !h-11 !w-11 !px-0">
+                        <MinusIcon width={18} height={18} aria-hidden="true" />
+                      </button>
+                      <span className="num w-6 text-center text-base font-semibold">{sharesCount[m.id] ?? 1}</span>
+                      <button type="button" aria-label={`More shares for ${m.name}`} onClick={() => bumpShares(m.id, 1)} className="btn-ghost !h-11 !w-11 !px-0">
+                        <PlusIcon width={18} height={18} aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
+
+                  {checked && mode === "equal" && (
+                    <span className="num min-w-20 shrink-0 whitespace-nowrap text-right text-sm text-muted">
+                      {share === undefined ? "" : formatINR(share)}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {mode === "exact" && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <p
+                aria-live="polite"
+                className={`num text-sm font-medium ${exactProblem || exactLeft < 0 ? "text-negative" : exactLeft === 0 && amountPaise ? "text-positive" : "text-muted"}`}
+              >
+                {exactProblem ??
+                  (!amountPaise
+                    ? "Enter the amount first"
+                    : exactLeft === 0
+                      ? "All assigned"
+                      : exactLeft > 0
+                        ? `${formatINR(exactLeft)} left to assign`
+                        : `${formatINR(-exactLeft)} over the total`)}
+              </p>
+              <button type="button" className="btn-ghost !px-3" onClick={fillExactEvenly} disabled={!amountPaise || selected.size === 0}>
+                Fill evenly
+              </button>
+            </div>
+          )}
+
+          {mode === "shares" && preview && (
+            <p className="num mt-3 text-sm text-muted">
+              {splits.reduce((sum, s) => sum + s.weight, 0)} shares in total, previewed per person above.
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-        <div className="mx-auto max-w-[640px]">
+      <div className="save-bar">
+        <div className="mx-auto max-w-[720px]">
           {(shownProblem || serverError) && (
-            <p role="alert" className="mb-2 text-sm font-semibold text-bad">
+            <p role="alert" className="mb-2 text-sm font-medium text-negative">
               {serverError ?? shownProblem}
             </p>
           )}
-          <button type="button" onClick={submit} disabled={pending} className="btn-accent w-full !min-h-12 text-base">
-            {pending ? "Saving..." : initial ? "Save changes" : "Add expense"}
+          <button type="button" onClick={submit} disabled={pending} className="btn-primary w-full !min-h-12 text-base">
+            {pending ? "Saving…" : initial ? "Save changes" : "Add expense"}
             {!pending && amountPaise ? ` · ${formatINR(amountPaise)}` : ""}
           </button>
         </div>

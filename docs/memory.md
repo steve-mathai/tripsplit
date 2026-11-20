@@ -68,7 +68,7 @@ The code is the source of truth. Notable differences:
 
 Environment
 - **npm needs PowerShell.** From Git Bash, npm scripts cannot find node. Use:
-  `powershell.exe -NoProfile -Command "$env:Path='C:\nvm4w\nodejs;'+$env:Path; Set-Location 'D:\Downloads\MATITHI\trip-splitter'; npm test"`
+  `powershell.exe -NoProfile -Command "$env:Path='C:\nvm4w\nodejs;'+$env:Path; Set-Location 'D:\Downloads\MATITHI\Build\trip-splitter'; npm test"`
 - **PGlite allows one process on `.data/`.** Stop the dev server before `db:seed` or `db:migrate`. `npm test` is pure maths and does not open the database, so it is safe beside a running dev server. Any future test that opens the DB will not be.
 - **Preview tool.** `preview_start {name}` in the Claude desktop app reads the workspace-root `D:\Downloads\MATITHI\.claude\launch.json`, which only has `tatva-dev`. For this app run `next dev -p 3210` and open it by URL.
 - **Git identity.** Repo-local config is the personal account (`steve-mathai`); the machine default is the work account (`stevemathew-zuro`). Check before committing.
@@ -100,6 +100,15 @@ Demo
 - `getTripBySlug` runs up to three times per navigation.
 - The UI date range uses an en dash. The no-dash rule applies to docs and new copy, not to that existing format.
 - No automated tests for `queries.ts`, server actions or components.
+
+## In progress (20 Nov 2026, uncommitted)
+
+Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. Do not commit; the owner approves commits.
+- Done on disk: the 26 Oct redesign of every trip screen (pastel-consumer app style, seed 1660474941, sheet in `.taste-skill/app/`); landing page (split-stage direction, seed 1913576966, sheet in `.taste-skill/`; `src/app/page.tsx`, `src/components/landing/`, photos in `public/photos/` with `credits.json`); logo "balance river" in `brand/` (alternatives in `brand/alternatives/`), wired via `src/app/icon.svg`, `apple-icon.png`, `opengraph-image.png`, `manifest.ts`, `MarkIcon`; copyright in LICENSE, README, package.json and the landing footer; before screenshots in `brand/screens/before/` (commit e6de7b6); security audit findings (S1 to S13, report draft in the session scratchpad, to become `docs/security-audit.md`).
+- Hardening done (121 tests green); migration 0001 applied locally; `docs/security-audit.md` written (S1 to S13); HSTS without `preload`; `RATE_LIMIT_SALT` in `.env.example`.
+- Round 1 inspector (20 Nov): trip screens 0 FAIL with `--app` except Plan `emoji` (user reactions are content: run Plan with `--allow emoji`); landing 6 FAIL being fixed (photos at native aspect per the owner's no-crop rule, emoji in fragments, 13px text, margins, covered text, eyebrow, edge text).
+- Done since round 1: landing round-1 fixes (photos at native aspect, unoptimized; no emoji in fragments; 15px+ fragment text; 16/24px margins; inactive states invisible+inert; wordmark-only top row; stacked create section below lg). Trip screens: web-design-guidelines, mobile-native and break-ui fixes (skip link, sheet focus, autocomplete, line-clamps, grapheme initials, settle sr-only table, subgrid river, phone plan rows). All edits lint/tsc clean but NOT yet seen in a render. Worst-case trips in the local DB: /t/coorg-and-wayanad-xx-rjxwns764n5zv493 and /t/q-udgsan3fk6mjcfxv.
+- RESUME HERE (paused 20 Nov 21:50 at usage limit): builds are blocked: Turbopack timed out on the Tailwind loader under load, and `next build` (webpack too) now stops with a security-upgrade notice until next is upgraded. package.json already says 16.4.6 for next and eslint-config-next; run the install through the lock first, then `npm run build`, `npx next start -p 3210`, re-run inspect.mjs on / (page rules) and on each trip screen with `--app` (Plan with `--allow emoji`), fix to 0 FAIL, look at every render; then after screenshots with the capture script (rewrite needed if scratchpad is gone) into `brand/screens/after/`; then, when `D:/Downloads/MATITHI/tools/npm-install.lock` is free, bump `next` and `eslint-config-next` to 16.4.6 (audit S12) via the lock, final `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`; stop the server; report. No commit.
 
 ## How to run
 

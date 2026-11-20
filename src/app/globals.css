@@ -1,156 +1,588 @@
 @import "tailwindcss";
 
-/* Palette: Kerala backwater teal + saffron accent on warm paper. */
+/*
+ * Tripsplit design tokens. Light by default, true-neutral dark under prefers-color-scheme.
+ * Backwater teal (--accent) is for data and selected states only (~5% of pixels).
+ * The one primary button per screen is near-black (--primary) and inverts in dark.
+ */
 :root {
-  --paper: #fbf7ef;
-  --card: #ffffff;
-  --card-soft: #f5efe2;
-  --ink: #17302d;
-  --muted: #5d7270;
-  --line: #e7dfce;
-  --primary: #0f766e;
-  --primary-deep: #0a4f4a;
-  --primary-soft: #d9f0ec;
-  --hero: #0a4f4a;
-  --accent: #f29a1f;
-  --accent-deep: #c97a06;
-  --accent-soft: #fde9c4;
-  --good: #15803d;
-  --good-soft: #dcf5e3;
-  --bad: #c2410c;
-  --bad-soft: #fde3d6;
+  --ground: #f3f5f4;
+  --surface: #ffffff;
+  --raised: #f2f6f5;
+  --active: #e9ecee;
+  --border: #e6e6e6;
+  --rule: #f1f2f3;
+  --control: #d6d9dd;
+  --text: #1b1d1f;
+  --muted: #5c6064;
+
+  --primary: #1b1d1f;
+  --primary-hover: #34373a;
+  --primary-fg: #ffffff;
+
+  --accent: #0f766e;
+  --accent-soft: #d7efeb;
+  --accent-ink: #0a4f4a;
+
+  --positive: #2f7a45;
+  --negative: #c41c29;
+  --warning: #92400e;
+
+  --pill-positive-bg: #dcfae5;
+  --pill-positive-ink: #04250e;
+  --pill-negative-bg: #ffedea;
+  --pill-negative-ink: #831c1e;
+  --pill-warning-bg: #fffbeb;
+  --pill-warning-ink: #92400e;
+  --pill-neutral-bg: #eef1f4;
+  --pill-neutral-ink: #3a3d40;
+
+  /* Category tiles: pale tint, dark ink of the same hue, and a full-strength chart colour. */
+  --cat-stay-tint: #d7efeb;
+  --cat-stay-ink: #0a4f4a;
+  --cat-stay-chart: #0f766e;
+  --cat-travel-tint: #dcebff;
+  --cat-travel-ink: #0a3a80;
+  --cat-travel-chart: #1d5fd6;
+  --cat-food-tint: #fdecc8;
+  --cat-food-ink: #7a3e00;
+  --cat-food-chart: #b45309;
+  --cat-activities-tint: #fde2e7;
+  --cat-activities-ink: #8a1538;
+  --cat-activities-chart: #be123c;
+
+  /* Fixed brand colour, darkened in light mode so the glyph keeps 3:1 on white. */
+  --whatsapp: #178a45;
+
+  /* Layout constants shared by the shell and by screens with fixed bars. */
+  --tabbar-h: 4rem;
+  --sidebar-w: 15rem;
+
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0d1a19;
-    --card: #152624;
-    --card-soft: #1b312e;
-    --ink: #e9f2ef;
-    --muted: #93aca8;
-    --line: #26413d;
-    --primary: #2dd4bf;
-    --primary-deep: #99f6e4;
-    --primary-soft: #123a36;
-    --hero: #0b3a36;
-    --accent: #fbbf24;
-    --accent-deep: #fcd34d;
-    --accent-soft: #3d2f10;
-    --good: #4ade80;
-    --good-soft: #12301e;
-    --bad: #fb923c;
-    --bad-soft: #3a1f12;
+    --ground: #0e0f10;
+    --surface: #17191a;
+    --raised: #1e2122;
+    --active: #2a2d2f;
+    --border: #26292b;
+    --rule: #1f2224;
+    --control: #3d4144;
+    --text: #f2f4f5;
+    --muted: #a9aeb2;
+
+    --primary: #f2f4f5;
+    --primary-hover: #ffffff;
+    --primary-fg: #0e0f10;
+
+    --accent: #5fd0c2;
+    --accent-soft: #12332f;
+    --accent-ink: #a7ebe2;
+
+    --positive: #5cc983;
+    --negative: #ff7a7a;
+    --warning: #f0b35c;
+
+    --pill-positive-bg: #15291c;
+    --pill-positive-ink: #5cc983;
+    --pill-negative-bg: #2f1618;
+    --pill-negative-ink: #ff7a7a;
+    --pill-warning-bg: #2b2010;
+    --pill-warning-ink: #f0b35c;
+    --pill-neutral-bg: #232628;
+    --pill-neutral-ink: #c4c8cb;
+
+    --cat-stay-tint: #12332f;
+    --cat-stay-ink: #a7ebe2;
+    --cat-stay-chart: #5fd0c2;
+    --cat-travel-tint: #14263f;
+    --cat-travel-ink: #b3d1ff;
+    --cat-travel-chart: #6aa2f5;
+    --cat-food-tint: #3a2a0c;
+    --cat-food-ink: #f6cf87;
+    --cat-food-chart: #e0a23a;
+    --cat-activities-tint: #3c1621;
+    --cat-activities-ink: #f9b8c8;
+    --cat-activities-chart: #f06b8e;
+
+    --whatsapp: #25d366;
+
     color-scheme: dark;
   }
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-card: var(--card);
-  --color-card-soft: var(--card-soft);
-  --color-ink: var(--ink);
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-active: var(--active);
+  --color-border: var(--border);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-text: var(--text);
   --color-muted: var(--muted);
-  --color-line: var(--line);
   --color-primary: var(--primary);
-  --color-primary-deep: var(--primary-deep);
-  --color-primary-soft: var(--primary-soft);
-  --color-hero: var(--hero);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
   --color-accent: var(--accent);
-  --color-accent-deep: var(--accent-deep);
   --color-accent-soft: var(--accent-soft);
-  --color-good: var(--good);
-  --color-good-soft: var(--good-soft);
-  --color-bad: var(--bad);
-  --color-bad-soft: var(--bad-soft);
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --color-accent-ink: var(--accent-ink);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-warning: var(--warning);
+  --color-positive-bg: var(--pill-positive-bg);
+  --color-positive-ink: var(--pill-positive-ink);
+  --color-negative-bg: var(--pill-negative-bg);
+  --color-negative-ink: var(--pill-negative-ink);
+  --color-warning-bg: var(--pill-warning-bg);
+  --color-warning-ink: var(--pill-warning-ink);
+  --color-neutral-bg: var(--pill-neutral-bg);
+  --color-neutral-ink: var(--pill-neutral-ink);
+  --color-whatsapp: var(--whatsapp);
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-panel: 0.75rem;
+  --radius-mark: 0.375rem;
+
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 600;
+  --text-section: 1.125rem;
+  --text-section--line-height: 1.4;
+  --text-section--font-weight: 600;
+  --text-lead: 2rem;
+  --text-lead--line-height: 1.15;
+  --text-lead--letter-spacing: -0.02em;
+  --text-lead--font-weight: 600;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1rem;
 }
 
 html {
-  background: var(--paper);
+  background: var(--ground);
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  accent-color: var(--accent);
 }
 
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--ground);
+  color: var(--text);
   font-family: var(--font-sans);
-  -webkit-tap-highlight-color: transparent;
 }
 
-/* Fixed bottom bar height, reused so page content never hides under it. */
-:root {
-  --tabbar-h: 4rem;
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
-/* Custom @utility (not plain classes) so these can be both used in markup and @apply'd. */
+/* Every control gets the same ring; nothing removes an outline without replacing it. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Controls are not content: a long press must not select their label or open the link callout. */
+button,
+[role="button"],
+[role="radio"],
+[role="checkbox"],
+summary {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+a,
+button,
+input,
+select,
+textarea,
+summary,
+[role="button"],
+[role="tab"] {
+  touch-action: manipulation;
+}
+
+/* Windows dark mode paints option lists from these, so they must be explicit. */
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* ---------- Surfaces ---------- */
+
+/* A card is a white surface with a 1px border. No shadow: only sheets, menus and toasts float. */
 @utility card {
-  @apply rounded-2xl border border-line bg-card;
-  box-shadow: 0 1px 0 rgb(23 48 45 / 0.03), 0 8px 24px -16px rgb(23 48 45 / 0.18);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
 }
+
+/* An inner panel sits inside a card (vote blocks, previews). */
+@utility panel {
+  border-radius: 0.75rem;
+  background-color: var(--raised);
+}
+
+/* ---------- Buttons ---------- */
 
 @utility btn {
-  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
-}
-
-@utility btn-primary {
-  @apply btn bg-primary text-white;
-  @media (prefers-color-scheme: dark) {
-    color: #052e2a;
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  padding-inline: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    transform 0.15s;
+  &:active {
+    transform: scale(0.98);
+  }
+  &:disabled,
+  &[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &:active {
+      transform: none;
+    }
   }
 }
 
-@utility btn-accent {
-  @apply btn text-[#3a2200];
-  background: var(--accent);
-  box-shadow: 0 6px 16px -8px var(--accent-deep);
+/* The one primary action on a screen: near-black fill, white label (inverted in dark). */
+@utility btn-primary {
+  @apply btn;
+  background-color: var(--primary);
+  color: var(--primary-fg);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--primary-hover);
+    }
+  }
 }
 
-@utility btn-soft {
-  @apply btn bg-primary-soft text-primary-deep;
+/* Everything else that is a real button: white surface, 1px control border, ink label. */
+@utility btn-secondary {
+  @apply btn;
+  background-color: var(--surface);
+  border-color: var(--control);
+  color: var(--text);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--raised);
+    }
+  }
 }
 
+/* Borderless: icon buttons and quiet text actions such as All / None. */
 @utility btn-ghost {
-  @apply btn border border-line bg-card text-ink;
+  @apply btn;
+  background-color: transparent;
+  color: var(--text);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--active);
+    }
+  }
 }
 
+/* Destructive: tonal red. Prefer a plain text button in --negative for inline "Remove". */
 @utility btn-danger {
-  @apply btn bg-bad-soft text-bad;
+  @apply btn;
+  background-color: var(--pill-negative-bg);
+  color: var(--pill-negative-ink);
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--negative);
+    }
+  }
 }
+
+/* ---------- Form controls ---------- */
 
 @utility field {
-  @apply block min-h-11 w-full rounded-xl border border-line bg-card px-3.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/25;
-}
-
-@utility label {
-  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted;
-}
-
-@utility chip {
-  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-line bg-card px-4 text-sm font-medium text-ink transition active:scale-[0.97];
-  &[data-active="true"] {
-    @apply border-primary bg-primary-soft text-primary-deep;
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--control);
+  background-color: var(--surface);
+  color: var(--text);
+  padding-inline: 0.875rem;
+  font-size: 1rem;
+  transition: border-color 0.15s;
+  &::placeholder {
+    color: var(--muted);
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--muted);
+    }
+  }
+  &:focus {
+    border-color: var(--accent);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+  &[aria-invalid="true"] {
+    border-color: var(--negative);
   }
 }
 
-@utility sheet-enter {
-  animation: sheet-up 0.22s ease-out;
+/* Same box as a field, for native <select>. Colours are explicit so Windows dark mode stays readable. */
+@utility select {
+  @apply field;
+  padding-block: 0.5rem;
 }
 
-/* Horizontal chip strip: scrolls but shows no scrollbar track, and fades out over the 1rem edge padding to hint at more. */
+textarea.field {
+  padding-block: 0.625rem;
+}
+
+/* Sentence case, 14px grey. Never uppercase, never tracked. */
+@utility label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* ---------- Chips and pills ---------- */
+
+/* An interactive filter or jump chip. Selected: data-active="true" or aria-pressed="true". */
+@utility chip {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  border: 1px solid var(--control);
+  background-color: var(--surface);
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+  &:active {
+    transform: scale(0.98);
+  }
+  &[data-active="true"],
+  &[aria-pressed="true"] {
+    border-color: var(--active);
+    background-color: var(--active);
+    font-weight: 600;
+  }
+  @media (hover: hover) {
+    &:hover:not([data-active="true"]):not([aria-pressed="true"]) {
+      background-color: var(--raised);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+/* A small read-only status label. Neutral by default; add one tone class. */
+@utility pill {
+  display: inline-flex;
+  min-height: 1.5rem;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  background-color: var(--pill-neutral-bg);
+  color: var(--pill-neutral-ink);
+  padding-inline: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@utility pill-positive {
+  background-color: var(--pill-positive-bg);
+  color: var(--pill-positive-ink);
+}
+
+@utility pill-negative {
+  background-color: var(--pill-negative-bg);
+  color: var(--pill-negative-ink);
+}
+
+@utility pill-warning {
+  background-color: var(--pill-warning-bg);
+  color: var(--pill-warning-ink);
+}
+
+@utility pill-accent {
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+/* ---------- Figures ---------- */
+
+/* Tabular figures: put on every amount, count and time so columns line up. */
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- People ---------- */
+
+/*
+ * Person colours. Set --p-h (a hue in degrees) on the element, usually via personTint(color).style,
+ * and these derive the pale tint and its ink. The dark values switch in CSS, no JS.
+ */
+@utility person-bg {
+  background-color: hsl(var(--p-h, 0) 70% 92%);
+  @media (prefers-color-scheme: dark) {
+    background-color: hsl(var(--p-h, 0) 30% 20%);
+  }
+}
+
+@utility person-ink {
+  color: hsl(var(--p-h, 0) 60% 26%);
+  @media (prefers-color-scheme: dark) {
+    color: hsl(var(--p-h, 0) 70% 80%);
+  }
+}
+
+@utility person-tint {
+  background-color: hsl(var(--p-h, 0) 70% 92%);
+  color: hsl(var(--p-h, 0) 60% 26%);
+  @media (prefers-color-scheme: dark) {
+    background-color: hsl(var(--p-h, 0) 30% 20%);
+    color: hsl(var(--p-h, 0) 70% 80%);
+  }
+}
+
+/* ---------- Shell helpers ---------- */
+
+/*
+ * The trip column: full width on phones with 16px margins, a centred 720px column from 640px,
+ * and a canvas of up to 1100px content with 32px gutters from 1024px (next to the sidebar).
+ */
+@utility trip-column {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 640px;
+  /* Landscape phones: keep content out from under the notch and the rounded corners. */
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  @media (min-width: 640px) {
+    max-width: 720px;
+  }
+  @media (min-width: 1024px) {
+    max-width: 1164px;
+    padding-inline: 2rem;
+  }
+}
+
+/* Two columns at lg (1024px) and up, stacked below. Children need no extra classes. */
+@utility wide-2col {
+  display: grid;
+  gap: 1rem;
+  & > * {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Main column plus a 360px aside at lg and up, stacked below (aside second). */
+@utility wide-2col-aside {
+  display: grid;
+  gap: 1rem;
+  & > * {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 1fr) 22.5rem;
+    gap: 1.5rem;
+    align-items: start;
+  }
+}
+
+/* A row that stays under the top of the screen while the list scrolls. Opaque, so nothing shows through. */
+@utility sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--ground);
+}
+
+/* Fixed bottom action bar (expense form save bar). Opaque, clears the sidebar at lg. */
+@utility save-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  border-top: 1px solid var(--border);
+  background-color: var(--surface);
+  padding: 0.75rem max(1rem, env(safe-area-inset-right)) calc(0.75rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  @media (min-width: 1024px) {
+    left: var(--sidebar-w);
+  }
+}
+
+/* ---------- Loading, motion ---------- */
+
+/* Flat placeholder bar at the real size. No shimmer. --active is used because --raised is invisible on both ground and white. */
+.skeleton {
+  border-radius: 0.75rem;
+  background-color: var(--active);
+}
+
+/* Horizontal chip strip: scrolls with no scrollbar. The clipped last chip is the hint that there is more. */
 .chip-row {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
-  mask-image: linear-gradient(to right, #000 calc(100% - 1rem), transparent);
 }
 
 .chip-row::-webkit-scrollbar {
   display: none;
 }
 
-textarea.field {
-  padding-block: 0.625rem;
+/* Sheets and menus are the only things that float, so they are the only things with a shadow. */
+@utility sheet-enter {
+  animation: sheet-up 0.2s ease-out;
 }
 
 @keyframes sheet-up {
@@ -164,26 +596,80 @@ textarea.field {
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
-.skeleton {
-  border-radius: 1rem;
-  background: linear-gradient(90deg, var(--card-soft) 0, var(--line) 50%, var(--card-soft) 100%);
-  background-size: 200px 100%;
-  background-repeat: no-repeat;
-  animation: shimmer 1.3s infinite linear;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .skeleton,
   .sheet-enter {
     animation: none;
+  }
+}
+
+/* landing: motion and cut-edge helpers used only by src/components/landing. */
+:root {
+  --landing-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --landing-ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Entrances for below-the-fold parts: hidden only once the reveal script has set the js class. */
+.js [data-reveal] {
+  transition:
+    opacity 700ms var(--landing-ease-expo) var(--d, 0ms),
+    transform 800ms var(--landing-ease-expo) var(--d, 0ms);
+}
+.js [data-reveal]:not([data-shown]) {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal="rise"]:not([data-shown]) {
+    transform: translateY(24px);
+  }
+  .js [data-reveal="settle"]:not([data-shown]) {
+    transform: scale(1.06);
+  }
+
+  /* First screen: plays on load without waiting for scripts, settled inside 1.2s. */
+  .landing-in {
+    animation: landing-in 700ms var(--landing-ease-out) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .landing-bar {
+    transform-origin: top;
+    animation: landing-bar 500ms var(--landing-ease-out) both;
+    animation-delay: calc(var(--i) * 40ms);
+  }
+  @keyframes landing-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+  @keyframes landing-bar {
+    from {
+      transform: scaleY(0);
+    }
+  }
+}
+
+/* Footer menu: the hovered label moves right and the others take the softer ink. */
+.landing-menu a {
+  display: inline-block;
+  color: var(--primary-fg);
+  transition:
+    transform 300ms var(--landing-ease-out),
+    color 180ms ease;
+}
+.landing-menu:hover a {
+  color: color-mix(in srgb, var(--primary-fg) 65%, var(--primary));
+}
+.landing-menu a:hover,
+.landing-menu a:focus-visible {
+  color: var(--primary-fg);
+  transform: translateX(12px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-menu a {
+    transition: color 180ms ease;
+  }
+  .landing-menu a:hover,
+  .landing-menu a:focus-visible {
+    transform: none;
   }
 }

@@ -21,7 +21,7 @@ async function ExpensesContent({ params }: { params: PageProps<"/t/[slug]/expens
   const trip = await getTripBySlug(slug);
   if (!trip) notFound();
   const expenses = await getExpenses(trip.id);
-  const nameOf = new Map(trip.members.map((m) => [m.id, m.name]));
+  const memberOf = new Map(trip.members.map((m) => [m.id, m]));
 
   return (
     <ExpenseList
@@ -32,7 +32,8 @@ async function ExpensesContent({ params }: { params: PageProps<"/t/[slug]/expens
         description: e.description,
         category: e.category,
         amountPaise: e.amountPaise,
-        paidByName: nameOf.get(e.paidBy) ?? "Someone",
+        paidByName: memberOf.get(e.paidBy)?.name ?? "Someone",
+        paidByColor: memberOf.get(e.paidBy)?.color ?? "",
         splitCount: e.splits.length,
         day: e.day,
       }))}

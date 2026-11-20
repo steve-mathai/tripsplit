@@ -1,16 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -37,15 +32,18 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  colorScheme: "light dark",
+  // Android Chrome: the keyboard shrinks the layout so the fixed save bar stays above it, as on iOS.
+  interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0f766e" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1a19" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f5f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f10" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className={`${jakarta.variable} ${fraunces.variable} h-full antialiased`}>
+    <html lang="en-IN" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

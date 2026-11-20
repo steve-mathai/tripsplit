@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { addMemberAction, chooseIdentityAction, removeMemberAction, updateUpiAction } from "@/app/t/[slug]/actions";
 import { Avatar } from "./avatar";
-import { CheckIcon, PlusIcon, TrashIcon } from "./icons";
+import { PlusIcon } from "./icons";
 
 export interface PersonRow {
   id: string;
@@ -13,75 +13,145 @@ export interface PersonRow {
   canRemove: boolean;
 }
 
-function PersonCard({ slug, person, isMe }: { slug: string; person: PersonRow; isMe: boolean }) {
+type Panel = "none" | "edit-upi" | "confirm-remove";
+
+/** Quiet text-button look for the row actions; the 44px height is the hit area, the ring comes from the global focus-visible rule. */
+const ACTION_BASE =
+  "inline-flex min-h-11 items-center rounded-mark px-3 text-sm font-medium underline-offset-4 hover:underline disabled:opacity-50 disabled:hover:no-underline";
+const ACTION_CLASS = `${ACTION_BASE} text-accent-ink`;
+
+function PersonItem({ slug, person, isMe }: { slug: string; person: PersonRow; isMe: boolean }) {
   const [upi, setUpi] = useState(person.upiId ?? "");
+  const [panel, setPanel] = useState<Panel>("none");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const editButton = useRef<HTMLButtonElement>(null);
+  const removeButton = useRef<HTMLButtonElement>(null);
   const changed = upi.trim() !== (person.upiId ?? "");
 
-  function run(work: () => Promise<{ error: string } | undefined>) {
+  function run(work: () => Promise<{ error: string } | undefined>, onSuccess?: () => void) {
     setError(null);
     startTransition(async () => {
       const result = await work();
       if (result?.error) setError(result.error);
+      else onSuccess?.();
     });
   }
 
+  function openEditor() {
+    setUpi(person.upiId ?? "");
+    setPanel("edit-upi");
+  }
+
+  function closePanel(returnFocusTo: HTMLButtonElement | null) {
+    setPanel("none");
+    setError(null);
+    returnFocusTo?.focus();
+  }
+
   return (
-    <li className={`card p-4 ${pending ? "opacity-70" : ""} ${isMe ? "border-primary ring-1 ring-primary/40" : ""}`}>
-      <div className="flex items-center gap-3">
+    <li className={`px-4 py-3 ${pending ? "opacity-70" : ""}`}>
+      <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-x-3 sm:grid-cols-[2.5rem_minmax(0,1fr)_auto]">
         <Avatar name={person.name} color={person.color} size="md" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-bold">{person.name}</p>
-          {isMe && <p className="text-xs font-bold text-primary-deep">This is you</p>}
+        <div className="min-w-0">
+          <p className="flex items-center gap-2">
+            <span className="line-clamp-2 min-w-0 text-base font-semibold [overflow-wrap:anywhere]">{person.name}</span>
+            {isMe && <span className="pill pill-accent shrink-0">You</span>}
+          </p>
+          <p className="text-sm text-muted [overflow-wrap:anywhere]">{person.upiId ?? "No UPI id"}</p>
         </div>
-        {!isMe && (
-          <button type="button" className="btn-soft !px-4" disabled={pending} onClick={() => run(() => chooseIdentityAction(slug, person.id))}>
-            This is me
-          </button>
-        )}
-        {person.canRemove && (
+        {/* Negative margins pull the 44px-tall actions closer to the UPI line without shrinking their hit area. */}
+        <div className="col-start-2 -mb-2 -ml-3 -mt-1 flex flex-wrap sm:col-start-3 sm:row-start-1 sm:m-0">
+          {!isMe && (
+            <button
+              type="button"
+              className={ACTION_CLASS}
+              disabled={pending}
+              onClick={() => run(() => chooseIdentityAction(slug, person.id))}
+            >
+              This is me
+            </button>
+          )}
           <button
+            ref={editButton}
             type="button"
-            aria-label={`Remove ${person.name}`}
-            className="btn-ghost !h-11 !w-11 !px-0 text-muted"
+            className={ACTION_CLASS}
+            aria-expanded={panel === "edit-upi"}
+            aria-label={`Edit UPI id for ${person.name}`}
             disabled={pending}
-            onClick={() => {
-              if (window.confirm(`Remove ${person.name} from the trip?`)) run(() => removeMemberAction(slug, person.id));
-            }}
+            onClick={() => (panel === "edit-upi" ? closePanel(null) : openEditor())}
           >
-            <TrashIcon width={18} height={18} />
+            Edit UPI id
           </button>
-        )}
+          {person.canRemove && (
+            <button
+              ref={removeButton}
+              type="button"
+              className={`${ACTION_BASE} text-negative`}
+              aria-label={`Remove ${person.name}`}
+              aria-expanded={panel === "confirm-remove"}
+              disabled={pending}
+              onClick={() => setPanel("confirm-remove")}
+            >
+              Remove
+            </button>
+          )}
+        </div>
       </div>
 
-      <form
-        className="mt-3 flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          run(() => updateUpiAction(slug, person.id, upi));
-        }}
-      >
-        <input
-          className="field"
-          inputMode="email"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder="UPI id (name@bank) - optional"
-          aria-label={`UPI id for ${person.name}`}
-          value={upi}
-          onChange={(e) => setUpi(e.target.value)}
-        />
-        {changed && (
-          <button type="submit" className="btn-primary shrink-0" disabled={pending}>
-            <CheckIcon width={18} height={18} />
-            Save
-          </button>
-        )}
-      </form>
+      {panel === "edit-upi" && (
+        <form
+          className="mt-3 space-y-2 pl-[3.25rem]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (changed) run(() => updateUpiAction(slug, person.id, upi), () => closePanel(editButton.current));
+          }}
+        >
+          <input
+            className="field"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            placeholder="name@bank (optional)"
+            aria-label={`UPI id for ${person.name}`}
+            value={upi}
+            onChange={(e) => setUpi(e.target.value)}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="btn-secondary" disabled={pending || !changed}>
+              {pending ? "Saving…" : "Save"}
+            </button>
+            <button type="button" className="btn-ghost" disabled={pending} onClick={() => closePanel(editButton.current)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {panel === "confirm-remove" && (
+        <div className="panel mt-3 ml-[3.25rem] p-3" role="group" aria-label={`Confirm removing ${person.name}`}>
+          <p className="text-sm [overflow-wrap:anywhere]">Remove {person.name} from the trip?</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              className="btn-danger"
+              disabled={pending}
+              onClick={() => run(() => removeMemberAction(slug, person.id))}
+            >
+              {pending ? "Removing…" : "Remove"}
+            </button>
+            <button type="button" className="btn-secondary" disabled={pending} autoFocus onClick={() => closePanel(removeButton.current)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-bad">
+        <p role="alert" className="mt-2 pl-[3.25rem] text-sm font-medium text-negative">
           {error}
         </p>
       )}
@@ -106,32 +176,49 @@ export function PeopleManager({ slug, people, currentMemberId }: { slug: string;
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted">
-        Add a UPI id so friends can pay you straight from the Settle tab. Names can only be removed before they appear in any expense.
-      </p>
-      <ul className="space-y-3">
-        {people.map((person) => (
-          <PersonCard key={person.id} slug={slug} person={person} isMe={person.id === currentMemberId} />
-        ))}
-      </ul>
+      <div>
+        <h2 className="text-section">People</h2>
+        <p className="mt-1 text-sm text-muted">
+          Add a UPI id so friends can pay you straight from the Settle tab. Names can only be removed before they appear in any expense.
+        </p>
+      </div>
 
-      <form onSubmit={add} className="card p-4">
-        <label className="label" htmlFor="new-member">
-          Add someone
-        </label>
-        <div className="flex gap-2">
-          <input id="new-member" className="field" placeholder="Name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
-          <button type="submit" className="btn-accent shrink-0" disabled={pending || !name.trim()}>
-            <PlusIcon width={18} height={18} />
-            Add
-          </button>
-        </div>
-        {error && (
-          <p role="alert" className="mt-2 text-sm font-semibold text-bad">
-            {error}
-          </p>
-        )}
-      </form>
+      <div className="wide-2col-aside">
+        <ul className="card divide-y divide-rule overflow-hidden">
+          {people.map((person) => (
+            <PersonItem key={person.id} slug={slug} person={person} isMe={person.id === currentMemberId} />
+          ))}
+        </ul>
+
+        <form onSubmit={add} className="card p-4">
+          <label className="label" htmlFor="new-member">
+            Add someone
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="new-member"
+              name="name"
+              className="field"
+              placeholder="Name"
+              autoComplete="off"
+              autoCapitalize="words"
+              enterKeyHint="done"
+              value={name}
+              maxLength={40}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <button type="submit" className="btn-primary shrink-0" disabled={pending || !name.trim()}>
+              <PlusIcon width={18} height={18} />
+              {pending ? "Adding…" : "Add"}
+            </button>
+          </div>
+          {error && (
+            <p role="alert" className="mt-2 text-sm font-medium text-negative">
+              {error}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
   );
 }

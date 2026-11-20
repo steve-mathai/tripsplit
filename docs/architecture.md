@@ -37,7 +37,7 @@ src/
     pg-errors.ts       SQLSTATE to UserError mapping
     guards.ts          isRecord, isOneOf (narrow untrusted input)
     expense-shape.ts   stored expense to maths shape (used by tests only, see limitations)
-    __tests__/         7 files, 67 tests
+    __tests__/         15 files, 111 tests
   db/
     schema.ts          Drizzle tables and constraints (one file)
     index.ts           connection switch, lazy proxy, runAtomically
@@ -265,7 +265,7 @@ One pass over expenses producing total, count, per-head average (total over all 
 | --- | --- |
 | Name | `ts_<tripId>` (the trip's UUID, not its slug) |
 | Value | the member's id |
-| Flags | `path=/`, `maxAge` one year, `sameSite=lax`, `httpOnly` |
+| Flags | `path=/t/<slug>`, `maxAge` one year, `sameSite=lax`, `httpOnly`, `secure` in production (built by `identityCookieOptions` in `src/lib/cookie-options.ts`) |
 | Read | `getCurrentMemberId(trip)` returns the id only if it is still a member of the trip, else `null` |
 | Set | on create trip (the creator), `chooseIdentityAction`, `joinAsNewMemberAction` |
 
@@ -286,7 +286,7 @@ Trust model: the link is the permission. Whoever has the URL can read and change
 
 Scoping of plan-item and member ids lives in `actions.ts` (the query functions take bare ids); expense scoping lives in `queries.ts`. A new action must add its own `require...InTrip` check.
 
-Not protected: nothing stops a visitor deleting expenses or removing uninvolved members, there is no rate limit, and a guessed slug grants access.
+Not protected: nothing stops a visitor deleting expenses or removing uninvolved members, and a guessed slug grants access. Abuse is limited by a Postgres fixed-window counter (`src/db/rate-limit.ts`, table `rate_limits`: 5 trips per hour per IP, 60 writes per minute per IP per trip, 20 not-found slugs per 10 minutes per IP in actions), per-trip caps (50 people, 500 plan items, 500 expenses) and text sanitising (`src/lib/text.ts`). The slug suffix is 16 random characters (about 79 bits). Security headers and the 64kb action body limit are set in `next.config.ts`.
 
 ## Error handling
 
@@ -299,7 +299,7 @@ Not protected: nothing stops a visitor deleting expenses or removing uninvolved 
 
 ## Testing strategy
 
-`npm test` runs `vitest run` over `src/**/*.test.ts`, node environment. Current count: 67 tests in 7 files, about 2.5 seconds.
+`npm test` runs `vitest run` over `src/**/*.test.ts`, node environment. Current count: 121 tests in 18 files (111 of them in `src/lib`); the run takes about 90 seconds on this machine, mostly worker startup.
 
 | File | What it pins down |
 | --- | --- |

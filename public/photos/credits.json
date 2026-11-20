@@ -1,0 +1,72 @@
+[
+ {
+  "file": "public/photos/backwaters-houseboats.jpg",
+  "media": "image",
+  "ref": "openverse:991a1506-592e-4348-9811-9b5258a82d31",
+  "title": "Kerala backwaters, Houseboats, India",
+  "creator": "Vyacheslav Argenberg",
+  "creatorUrl": "https://commons.wikimedia.org/wiki/User:Argenberg",
+  "date": null,
+  "license": "CC BY 4.0",
+  "licenseCode": "by",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/w/index.php?curid=123031037",
+  "via": "Wikimedia Commons",
+  "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg/1920px-Kerala_backwaters%2C_Houseboats%2C_India.jpg",
+  "width": 1920,
+  "height": 1280,
+  "bytes": 505279,
+  "credit": "\"Kerala backwaters, Houseboats, India\" by Vyacheslav Argenberg, CC BY 4.0, via Wikimedia Commons",
+  "notes": [],
+  "saved": "2026-11-07T00:04:44.490Z"
+ },
+ {
+  "file": "public/photos/kochi-fishing-net.jpg",
+  "media": "image",
+  "ref": "openverse:f9186e87-2bb9-4365-b7a5-6505727add74",
+  "title": "The Chinese fishing net,Kochi (14227489797)",
+  "creator": "Archana Menon from mumbai, india",
+  "creatorUrl": "https://www.flickr.com/people/24379021@N05",
+  "date": null,
+  "license": "CC BY-SA 2.0",
+  "licenseCode": "by-sa",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/w/index.php?curid=87474817",
+  "via": "Wikimedia Commons",
+  "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/The_Chinese_fishing_net%2CKochi_%2814227489797%29.jpg/1920px-The_Chinese_fishing_net%2CKochi_%2814227489797%29.jpg",
+  "width": 1920,
+  "height": 2880,
+  "bytes": 696673,
+  "credit": "\"The Chinese fishing net,Kochi (14227489797)\" by Archana Menon from mumbai, india, CC BY-SA 2.0, via Wikimedia Commons",
+  "notes": [
+   "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+  ],
+  "saved": "2026-11-07T00:04:47.331Z"
+ },
+ {
+  "file": "public/photos/munnar-tea.jpg",
+  "media": "image",
+  "ref": "openverse:cf5e316a-c886-475a-a874-794d774337ba",
+  "title": "Munnar Tea Plantations-IMG 20250321 094009",
+  "creator": "Rainer Halama",
+  "creatorUrl": "https://commons.wikimedia.org/wiki/User:Rainer_Halama",
+  "date": null,
+  "license": "CC BY-SA 4.0",
+  "licenseCode": "by-sa",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/w/index.php?curid=167795960",
+  "via": "Wikimedia Commons",
+  "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Munnar_Tea_Plantations-IMG_20250321_094009.jpg/1920px-Munnar_Tea_Plantations-IMG_20250321_094009.jpg",
+  "width": 1920,
+  "height": 872,
+  "bytes": 552666,
+  "credit": "\"Munnar Tea Plantations-IMG 20250321 094009\" by Rainer Halama, CC BY-SA 4.0, via Wikimedia Commons",
+  "notes": [
+   "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+  ],
+  "saved": "2026-11-07T00:04:49.537Z"
+ }
+]

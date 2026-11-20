@@ -10,7 +10,7 @@ export const metadata = { title: "People" };
 
 export default function PeoplePage({ params }: PageProps<"/t/[slug]/people">) {
   return (
-    <Suspense fallback={<CardSkeleton count={4} height="h-28" />}>
+    <Suspense fallback={<CardSkeleton count={1} height="h-96" />}>
       <PeopleContent params={params} />
     </Suspense>
   );

@@ -28,7 +28,7 @@ export function ShareButton({ slug, tripName }: { slug: string; tripName: string
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="btn bg-white text-hero shadow-sm">
+      <button type="button" onClick={() => setOpen(true)} className="btn-secondary">
         <ShareIcon width={18} height={18} />
         Share
       </button>
@@ -37,18 +37,18 @@ export function ShareButton({ slug, tripName }: { slug: string; tripName: string
           <p className="mb-3 text-sm text-muted">
             Anyone with this link can view and edit the trip. Drop it in the WhatsApp group.
           </p>
-          <div className="mb-4 break-all rounded-xl border border-line bg-card-soft px-3.5 py-3 text-sm font-medium">{url}</div>
+          <div className="panel mb-4 break-all px-3.5 py-3 text-sm font-medium">{url}</div>
           <div className="grid gap-2.5">
+            <CopyButton text={url} label="Copy link" className="btn-primary" />
             <a
               href={`https://wa.me/?text=${encodeURIComponent(message)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn bg-[#25d366] text-[#052e16]"
+              className="btn-secondary"
             >
-              <WhatsAppIcon width={20} height={20} />
+              <WhatsAppIcon width={20} height={20} className="text-whatsapp" />
               Share on WhatsApp
             </a>
-            <CopyButton text={url} label="Copy link" className="btn-soft" />
             {nativeShare && (
               <button type="button" onClick={shareNatively} className="btn-ghost">
                 <ShareIcon width={18} height={18} />

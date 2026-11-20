@@ -13,20 +13,25 @@ export type Vote = (typeof VOTES)[number];
 export const EMOJIS = ["🔥", "😍", "😴", "💸", "🤔"] as const;
 export type Emoji = (typeof EMOJIS)[number];
 
-/** Avatar colours handed out to members in join order (wraps around). */
+/**
+ * Person colours handed out to members in join order (wraps around). Only the hue is used (see
+ * person-tint.ts). Rules: no hue between 245 and 300 degrees (no violet or indigo), and neighbours
+ * in this list are at least 60 degrees apart, including the wrap from last to first.
+ * Hues in order: 328, 80, 205, 34, 155, 350, 105, 228, 56, 180, 12, 130.
+ */
 export const MEMBER_COLORS = [
-  "#0f766e",
-  "#d97706",
-  "#be185d",
-  "#4f46e5",
-  "#15803d",
-  "#b91c1c",
-  "#0369a1",
-  "#7e22ce",
-  "#c2410c",
-  "#4d7c0f",
-  "#0e7490",
-  "#a21caf",
+  "#9e1a60",
+  "#729e1a",
+  "#1a679e",
+  "#9e651a",
+  "#1a9e67",
+  "#9e1a30",
+  "#3b9e1a",
+  "#1a349e",
+  "#9e951a",
+  "#1a9e9e",
+  "#9e341a",
+  "#1a9e30",
 ] as const;
 
 /**
@@ -68,3 +73,19 @@ export interface Transfer {
   to: string;
   amountPaise: number;
 }
+
+/** Per-trip hard caps (abuse limits, far above real use). Enforced server-side in queries.ts. */
+export const MAX_MEMBERS = 50;
+export const MAX_PLAN_ITEMS = 500;
+export const MAX_EXPENSES = 500;
+
+/** Maximum characters per free-text field, enforced server-side after sanitising. */
+export const TEXT_LIMITS = {
+  tripName: 80,
+  baseLocation: 80,
+  memberName: 40,
+  planTitle: 120,
+  planNotes: 500,
+  expenseDescription: 120,
+  upiId: 50,
+} as const;

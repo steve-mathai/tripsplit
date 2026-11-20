@@ -43,3 +43,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tasteskill working files (screenshots); direction sheets are kept
+/.taste-skill/inspect/
+/.taste-skill/before/
+/.taste-skill/after/
+/.taste-skill/**/*.png
+/.taste-skill/**/*.jpg
+
+# secrets (secrets audit 2026-11-20)
+.env
+.env.*
+!.env.example
+*.key
+*.local.md
+.vercel/

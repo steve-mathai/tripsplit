@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Avatar } from "@/components/avatar";
-import { BarRows, Donut } from "@/components/bars";
+import { BulletRows, DayColumns, RingChart } from "@/components/bars";
 import { CATEGORY_META } from "@/components/categories";
-import { formatDayShort } from "@/components/dates";
+import { formatDayShort, tripDays } from "@/components/dates";
 import { CardSkeleton } from "@/components/skeletons";
 import { getExpenses, getTripBySlug } from "@/db/queries";
 import { formatINR } from "@/lib/money";
@@ -22,6 +22,13 @@ export default function SummaryPage({ params }: PageProps<"/t/[slug]/summary">) 
   );
 }
 
+/** "42%"; a non-zero share under half a percent reads "<1%" so it is not shown as nothing. */
+function shareText(value: number, total: number): string {
+  if (total <= 0 || value <= 0) return "0%";
+  const percent = (value / total) * 100;
+  return percent < 0.5 ? "<1%" : `${Math.round(percent)}%`;
+}
+
 async function SummaryContent({ params }: { params: PageProps<"/t/[slug]/summary">["params"] }) {
   await connection();
   const { slug } = await params;
@@ -30,101 +37,127 @@ async function SummaryContent({ params }: { params: PageProps<"/t/[slug]/summary
   const expenses = await getExpenses(trip.id);
   const summary = summarize(trip.members, toMathsExpenses(expenses));
   const memberById = new Map(trip.members.map((m) => [m.id, m]));
+  const dayCount = tripDays(trip.startDate, trip.endDate).length;
 
-  const stats = [
-    { label: "Total spend", value: formatINR(summary.totalPaise), tone: "col-span-2 bg-primary-soft text-primary-deep", size: "text-3xl" },
-    { label: "Per head", value: formatINR(summary.averagePerHeadPaise), tone: "bg-accent-soft text-accent-deep", size: "text-xl" },
-    { label: "Expenses", value: String(summary.expenseCount), tone: "bg-card-soft text-ink", size: "text-xl" },
-  ];
+  // Largest first for the ring and the table; ties keep the fixed category order (sort is stable).
+  const categories = CATEGORIES.map((key) => ({ key, ...CATEGORY_META[key], value: summary.byCategory[key] })).sort((a, b) => b.value - a.value);
+  const topCategory = categories[0];
+  const ringDescription =
+    summary.totalPaise > 0
+      ? `Spend by category: ${categories.map((c) => `${c.label} ${shareText(c.value, summary.totalPaise)}`).join(", ")}`
+      : "Spend by category: no spend yet";
 
-  const categoryRows = CATEGORIES.map((key) => {
-    const { Icon, label, color } = CATEGORY_META[key];
-    return {
-      key,
-      value: summary.byCategory[key],
-      color,
-      label: (
-        <>
-          <Icon width={18} height={18} className="shrink-0" />
-          {label}
-        </>
-      ),
-    };
-  });
+  const people = summary.perPerson
+    .map((p) => ({ ...p, member: memberById.get(p.memberId)! }))
+    .sort((a, b) => b.sharePaise - a.sharePaise || a.member.name.localeCompare(b.member.name));
 
   return (
-    <div className="space-y-5">
-      {/* Total spend gets a full row; two columns keep "Per head" clear of the tile edge at 375px. */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {stats.map((s) => (
-          <div key={s.label} className={`min-w-0 rounded-2xl p-3 ${s.tone}`}>
-            <p className="text-[11px] font-bold uppercase tracking-wide opacity-75">{s.label}</p>
-            <p className={`mt-1 break-words font-display font-semibold leading-tight tabular-nums ${s.size}`}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
+    <div className="space-y-4">
       <section className="card p-4">
-        <h2 className="mb-4 font-display text-lg font-semibold">Where the money went</h2>
-        <Donut
-          segments={categoryRows.map((r) => ({ key: r.key, value: r.value, color: r.color }))}
-          centre={
-            <>
-              <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Total</span>
-              <span className="font-display text-xl font-semibold tabular-nums">{formatINR(summary.totalPaise)}</span>
-            </>
-          }
-        />
-        <div className="mt-5">
-          <BarRows
-            rows={categoryRows.map((r) => ({
-              ...r,
-              valueLabel: `${formatINR(r.value)} · ${summary.totalPaise ? Math.round((r.value / summary.totalPaise) * 100) : 0}%`,
-            }))}
-          />
-        </div>
-      </section>
-
-      <section className="card p-4">
-        <h2 className="font-display text-lg font-semibold">Per person</h2>
-        <p className="mb-4 text-sm text-muted">
-          Bar is the share each person consumed. The <span className="font-bold text-accent-deep">saffron tick</span> marks what they paid out of pocket.
+        <p className="text-sm text-muted">Total spent</p>
+        <p className="num text-lead">{formatINR(summary.totalPaise)}</p>
+        <p className="num mt-1 text-sm text-muted">
+          {formatINR(summary.averagePerHeadPaise)} a head · {summary.expenseCount} {summary.expenseCount === 1 ? "expense" : "expenses"} · {dayCount}{" "}
+          {dayCount === 1 ? "day" : "days"}
         </p>
-        <BarRows
-          rows={summary.perPerson.map((p) => {
-            const m = memberById.get(p.memberId)!;
-            return {
-              key: p.memberId,
-              value: p.sharePaise,
-              marker: p.paidPaise,
-              color: m.color,
-              note: p.paidPaise > 0 ? `Paid ${formatINR(p.paidPaise)}` : undefined,
-              label: (
-                <>
-                  <Avatar name={m.name} color={m.color} size="sm" />
-                  <span className="truncate">{m.name}</span>
-                </>
-              ),
-            };
-          })}
-        />
       </section>
 
-      <section className="card p-4">
-        <h2 className="mb-4 font-display text-lg font-semibold">Per day</h2>
-        {summary.perDay.length === 0 ? (
-          <p className="text-sm text-muted">No expenses yet.</p>
-        ) : (
-          <BarRows
-            rows={summary.perDay.map((d) => ({
-              key: d.day ?? "undated",
-              value: d.totalPaise,
-              color: "var(--primary)",
-              label: d.day ? formatDayShort(d.day) : "No specific day",
-            }))}
-          />
-        )}
-      </section>
+      <div className="wide-2col lg:items-start">
+        <div className="space-y-4">
+          <section className="card p-4">
+            <h2 className="mb-4 text-section">Where the money went</h2>
+            <div className="flex flex-col items-center gap-5 sm:flex-row">
+              <RingChart
+                description={ringDescription}
+                segments={categories.map((c) => ({ key: c.key, value: c.value, color: c.chart }))}
+                centre={
+                  topCategory.value > 0 && (
+                    <>
+                      <span className="num text-section">{shareText(topCategory.value, summary.totalPaise)}</span>
+                      <span className="text-meta text-muted">{topCategory.label}</span>
+                    </>
+                  )
+                }
+              />
+              <table className="w-full min-w-0 text-sm">
+                <thead>
+                  <tr className="text-meta text-muted">
+                    <th scope="col" className="pb-2 text-left font-normal">
+                      Category
+                    </th>
+                    <th scope="col" className="pb-2 text-right font-normal">
+                      Amount
+                    </th>
+                    <th scope="col" className="w-14 pb-2 text-right font-normal">
+                      Share
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-rule border-t border-rule">
+                  {categories.map((c) => (
+                    <tr key={c.key}>
+                      <th scope="row" className="py-2.5 text-left font-normal">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.chart }} />
+                          <span className="truncate">{c.label}</span>
+                        </span>
+                      </th>
+                      <td className="num py-2.5 text-right font-semibold">{formatINR(c.value)}</td>
+                      <td className="num py-2.5 text-right text-muted">{shareText(c.value, summary.totalPaise)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="card p-4">
+            <h2 className="mb-4 text-section">Per day</h2>
+            {summary.perDay.length === 0 ? (
+              <p className="text-sm text-muted">No expenses yet.</p>
+            ) : (
+              <DayColumns
+                days={summary.perDay.map((d) => ({
+                  key: d.day ?? "undated",
+                  // "Fri 30 Oct" -> "Fri 30": the card title already says these are days.
+                  label: d.day ? formatDayShort(d.day).split(" ").slice(0, 2).join(" ") : "No day",
+                  valuePaise: d.totalPaise,
+                }))}
+              />
+            )}
+          </section>
+        </div>
+
+        <div className="space-y-4">
+          <section className="card p-4">
+            <h2 className="text-section">Per person</h2>
+            <p className="mb-4 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden="true" className="h-2 w-4 rounded-full bg-accent" />
+                Share of spend
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden="true" className="h-4 w-0.5 bg-text" />
+                What they paid
+              </span>
+            </p>
+            <BulletRows
+              rows={people.map((p) => ({
+                key: p.memberId,
+                name: p.member.name,
+                sharePaise: p.sharePaise,
+                paidPaise: p.paidPaise,
+                label: (
+                  <>
+                    <Avatar name={p.member.name} color={p.member.color} size="sm" />
+                    <span className="truncate">{p.member.name}</span>
+                  </>
+                ),
+              }))}
+            />
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

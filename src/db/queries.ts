@@ -2,16 +2,23 @@
 // (under Cache Components these must run inside <Suspense> or after connection()).
 // Multi-step writes go through runAtomically (one transaction on both drivers), so a failure
 // midway never leaves a half-written expense or trip behind.
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { UserError } from "../lib/errors";
 import { isOneOf, isRecord } from "../lib/guards";
 import { toUserError } from "../lib/pg-errors";
+import { assertRoomFor } from "../lib/limits";
+import { slugFromName } from "../lib/slug";
 import { SplitError, validateSplit } from "../lib/split";
+import { optionalText, requireText, sanitizeText } from "../lib/text";
 import {
   CATEGORIES,
   EMOJIS,
+  MAX_EXPENSES,
+  MAX_MEMBERS,
+  MAX_PLAN_ITEMS,
   MEMBER_COLORS,
   SPLIT_MODES,
+  TEXT_LIMITS,
   VOTES,
   type Category,
   type Emoji,
@@ -78,24 +85,8 @@ const newId = () => crypto.randomUUID();
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
-const UPI_PATTERN = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z0-9.-]{2,64}$/;
-
-function requireText(raw: unknown, label: string, maxLength: number): string {
-  if (typeof raw !== "string") throw new UserError(`${label} is required`);
-  const text = raw.replace(/\s+/g, " ").trim();
-  if (text === "") throw new UserError(`${label} is required`);
-  if (text.length > maxLength) throw new UserError(`${label} must be at most ${maxLength} characters`);
-  return text;
-}
-
-function optionalText(raw: unknown, label: string, maxLength: number): string | null {
-  if (raw === null || raw === undefined) return null;
-  if (typeof raw !== "string") throw new UserError(`${label} is not valid`);
-  const text = raw.trim();
-  if (text === "") return null;
-  if (text.length > maxLength) throw new UserError(`${label} must be at most ${maxLength} characters`);
-  return text;
-}
+// name@bank, no spaces; the length cap is checked separately so the message can stay one sentence.
+const UPI_PATTERN = /^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/;
 
 function requireDate(raw: unknown, label: string): string {
   if (typeof raw === "string" && DATE_PATTERN.test(raw)) {
@@ -131,9 +122,9 @@ async function withFriendlyErrors<T>(work: () => Promise<T>, uniqueMessage?: str
 function cleanUpi(raw: unknown): string | null {
   if (raw === null || raw === undefined) return null;
   if (typeof raw !== "string") throw new UserError("That UPI id does not look right (expected name@bank)");
-  const upi = raw.trim();
+  const upi = sanitizeText(raw);
   if (upi === "") return null;
-  if (!UPI_PATTERN.test(upi)) throw new UserError("That UPI id does not look right (expected name@bank)");
+  if (upi.length > TEXT_LIMITS.upiId || !UPI_PATTERN.test(upi)) throw new UserError("That UPI id does not look right (expected name@bank)");
   return upi;
 }
 
@@ -142,7 +133,7 @@ function memberRows(tripId: string, inputs: NewMember[], existingCount: number):
   return inputs.map((input, index) => ({
     id: newId(),
     tripId,
-    name: requireText(input.name, "Name", 40),
+    name: requireText(input.name, "Name", TEXT_LIMITS.memberName),
     upiId: cleanUpi(input.upiId),
     color: MEMBER_COLORS[(existingCount + index) % MEMBER_COLORS.length],
     // Distinct timestamps keep the join order stable when many rows share one insert.
@@ -162,20 +153,6 @@ async function assertNameFree(tripId: string, name: string, exceptMemberId?: str
 
 // ---------- trips and members ----------
 
-function slugFromName(name: string): string {
-  const stem =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 20)
-      .replace(/-+$/, "") || "trip";
-  // No 0/1/i/l/o so slugs survive being read out loud or retyped from WhatsApp.
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => alphabet[b % alphabet.length]).join("");
-  return `${stem}-${suffix}`;
-}
-
 export async function getTripBySlug(slug: string): Promise<TripWithMembers | null> {
   const [trip] = await db.select().from(trips).where(eq(trips.slug, slug)).limit(1);
   if (!trip) return null;
@@ -189,22 +166,23 @@ export async function getTripBySlug(slug: string): Promise<TripWithMembers | nul
 
 /** Creates a trip with its members; returns the slug plus the members (in input order, minus duplicates). */
 export async function createTrip(input: NewTrip): Promise<{ slug: string; tripId: string; members: Member[] }> {
-  const name = requireText(input.name, "Trip name", 80);
-  const baseLocation = requireText(input.baseLocation, "Base location", 80);
+  const name = requireText(input.name, "Trip name", TEXT_LIMITS.tripName);
+  const baseLocation = requireText(input.baseLocation, "Base location", TEXT_LIMITS.baseLocation);
   const startDate = requireDate(input.startDate, "Start date");
   const endDate = requireDate(input.endDate, "End date");
   if (endDate < startDate) throw new UserError("End date cannot be before the start date");
 
   const seen = new Set<string>();
   const uniqueInputs = input.members
-    .filter((m) => m.name.trim() !== "")
+    .filter((m) => typeof m.name === "string" && sanitizeText(m.name) !== "")
     .filter((m) => {
-      const key = m.name.replace(/\s+/g, " ").trim().toLowerCase();
+      const key = sanitizeText(m.name).toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
   if (uniqueInputs.length === 0) throw new UserError("Add at least one person to the trip");
+  if (uniqueInputs.length > MAX_MEMBERS) throw new UserError(`A trip can have at most ${MAX_MEMBERS} people`);
 
   const tripId = newId();
   const slug = input.slug ?? slugFromName(name);
@@ -223,6 +201,7 @@ export async function createTrip(input: NewTrip): Promise<{ slug: string; tripId
 
 export async function addMember(tripId: string, input: NewMember): Promise<Member> {
   const existing = await db.select({ id: members.id }).from(members).where(eq(members.tripId, tripId));
+  assertRoomFor(existing.length, MAX_MEMBERS, "people");
   const [row] = memberRows(tripId, [input], existing.length);
   await assertNameFree(tripId, row.name);
   // The unique index also catches a duplicate that slipped in after the check above.
@@ -240,7 +219,7 @@ export async function updateMember(
 
   const patch: Partial<Pick<Member, "name" | "upiId">> = {};
   if (changes.name !== undefined) {
-    patch.name = requireText(changes.name, "Name", 40);
+    patch.name = requireText(changes.name, "Name", TEXT_LIMITS.memberName);
     await assertNameFree(current.tripId, patch.name, memberId);
   }
   if (changes.upiId !== undefined) patch.upiId = cleanUpi(changes.upiId);
@@ -312,6 +291,8 @@ export async function addPlanItem(tripId: string, input: NewPlanItem): Promise<P
   if (time !== null && !TIME_PATTERN.test(time)) throw new UserError("Time must look like 14:30");
   const day = requireDate(input.day, "Day");
   await requireDayInTrip(tripId, day, "Day");
+  const [{ total }] = await db.select({ total: count() }).from(planItems).where(eq(planItems.tripId, tripId));
+  assertRoomFor(total, MAX_PLAN_ITEMS, "plan items");
   const [row] = await db
     .insert(planItems)
     .values({
@@ -319,8 +300,8 @@ export async function addPlanItem(tripId: string, input: NewPlanItem): Promise<P
       tripId,
       day,
       time,
-      title: requireText(input.title, "Place", 120),
-      notes: optionalText(input.notes, "Notes", 500),
+      title: requireText(input.title, "Place", TEXT_LIMITS.planTitle),
+      notes: optionalText(input.notes, "Notes", TEXT_LIMITS.planNotes, true),
       kind: input.kind ?? "plan",
       createdBy: input.createdBy ?? null,
     })
@@ -441,7 +422,7 @@ export function parseExpenseInput(raw: unknown): ExpenseInput {
 /** Checks everything about an expense against the trip and returns the cleaned values to store. */
 async function validateExpense(tripId: string, rawInput: unknown): Promise<ExpenseInput> {
   const input = parseExpenseInput(rawInput);
-  const description = requireText(input.description, "Description", 120);
+  const description = requireText(input.description, "Description", TEXT_LIMITS.expenseDescription);
   const day = input.day === null ? null : requireDate(input.day, "Date");
   if (day !== null) await requireDayInTrip(tripId, day, "Date");
 
@@ -474,6 +455,8 @@ function expenseColumns(clean: ExpenseInput) {
 
 export async function createExpense(tripId: string, input: ExpenseInput): Promise<ExpenseWithSplits> {
   const clean = await validateExpense(tripId, input);
+  const [{ total }] = await db.select({ total: count() }).from(expenses).where(eq(expenses.tripId, tripId));
+  assertRoomFor(total, MAX_EXPENSES, "expenses");
   const expenseId = newId();
   await runAtomically((client) => [
     client.insert(expenses).values({ id: expenseId, tripId, ...expenseColumns(clean) }),

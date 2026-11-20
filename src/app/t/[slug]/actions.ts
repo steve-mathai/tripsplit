@@ -22,9 +22,11 @@ import {
   type TripWithMembers,
 } from "@/db/queries";
 import type { ActionResult, ExpensePayload } from "@/components/expense-payload";
+import { enforceLimit, isOverLimit, recordHit } from "@/db/rate-limit";
 import { UserError } from "@/lib/errors";
 import { isRecord } from "@/lib/guards";
 import { toUserError } from "@/lib/pg-errors";
+import { CREATE_TRIP_LIMIT_MESSAGE, RATE_LIMITS, WRITE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getCurrentMemberId, setIdentityCookie } from "./identity";
 import { EMOJIS, VOTES, type Emoji, type Vote } from "@/lib/types";
 
@@ -35,9 +37,21 @@ function requireString(value: unknown, label: string): string {
   return value;
 }
 
+const TRIP_GONE = "This trip no longer exists";
+
+/**
+ * Loads the trip for a mutating action and rate-limits the caller. Every action here writes, so
+ * this is the one choke point. A client that keeps asking for slugs that do not exist is refused
+ * with the same message as a missing trip, so guessing slugs cannot be sped up.
+ */
 async function loadTrip(slug: unknown): Promise<TripWithMembers> {
+  if (await isOverLimit(RATE_LIMITS.slugMiss)) throw new UserError(TRIP_GONE);
   const trip = await getTripBySlug(requireString(slug, "Trip link"));
-  if (!trip) throw new UserError("This trip no longer exists");
+  if (!trip) {
+    await recordHit(RATE_LIMITS.slugMiss);
+    throw new UserError(TRIP_GONE);
+  }
+  await enforceLimit(RATE_LIMITS.write, WRITE_LIMIT_MESSAGE, trip.id);
   return trip;
 }
 
@@ -79,6 +93,7 @@ export async function createTripAction(_previous: CreateTripState, formData: For
   try {
     const yourName = values.yourName.trim();
     if (!yourName) throw new UserError("Tell us your name so we know who you are");
+    await enforceLimit(RATE_LIMITS.createTrip, CREATE_TRIP_LIMIT_MESSAGE);
     const others = values.others.split(/[\n,]+/).map((n) => n.trim()).filter(Boolean);
     const created = await createTrip({
       name: values.name,
@@ -87,7 +102,7 @@ export async function createTripAction(_previous: CreateTripState, formData: For
       endDate: values.endDate,
       members: [yourName, ...others].map((name) => ({ name })),
     });
-    await setIdentityCookie(created.tripId, created.members[0].id);
+    await setIdentityCookie(created.tripId, created.slug, created.members[0].id);
     slug = created.slug;
   } catch (error) {
     const message = friendlyMessage(error);
@@ -103,7 +118,7 @@ export async function chooseIdentityAction(slug: string, memberId: string): Prom
   return guarded(async () => {
     const trip = await loadTrip(slug);
     if (!trip.members.some((m) => m.id === memberId)) throw new UserError("That person is not on this trip");
-    await setIdentityCookie(trip.id, memberId);
+    await setIdentityCookie(trip.id, trip.slug, memberId);
     refresh(slug);
   });
 }
@@ -112,7 +127,7 @@ export async function joinAsNewMemberAction(slug: string, name: string): Promise
   return guarded(async () => {
     const trip = await loadTrip(slug);
     const member = await addMember(trip.id, { name });
-    await setIdentityCookie(trip.id, member.id);
+    await setIdentityCookie(trip.id, trip.slug, member.id);
     refresh(slug);
   });
 }
