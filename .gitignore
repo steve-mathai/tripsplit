@@ -46,6 +46,7 @@ next-env.d.ts
 
 # tasteskill working files (screenshots); direction sheets are kept
 /.taste-skill/inspect/
+/.taste-skill/inspect*/
 /.taste-skill/before/
 /.taste-skill/after/
 /.taste-skill/**/*.png

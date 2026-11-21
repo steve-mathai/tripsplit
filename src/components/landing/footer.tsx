@@ -4,7 +4,7 @@ import { MarkIcon } from "../icons";
 import credits from "../../../public/photos/credits.json";
 import { delay } from "./delay";
 import { Stripe } from "./stripe";
-import { MICRO, TITLE } from "./type";
+import { BODY, TITLE } from "./type";
 
 const MENU = [
   { label: "Plan", href: "#menu-plan" },
@@ -14,7 +14,7 @@ const MENU = [
   { label: "Create a trip", href: "#start" },
 ];
 
-const SOFT = "text-[color-mix(in_srgb,var(--primary-fg)_65%,var(--primary))]";
+const SOFT = "text-[color-mix(in_srgb,var(--primary-fg)_80%,var(--primary))]";
 
 export function Footer() {
   return (
@@ -58,7 +58,7 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div className={`${MICRO} mt-auto pt-16 ${SOFT}`}>
+          <div className={`${BODY} mt-auto pt-16 ${SOFT}`}>
             <p>Photographs, all from Wikimedia Commons:</p>
             <ul className="mt-2 space-y-2">
               {credits.map((credit) => (

@@ -101,14 +101,19 @@ Demo
 - The UI date range uses an en dash. The no-dash rule applies to docs and new copy, not to that existing format.
 - No automated tests for `queries.ts`, server actions or components.
 
-## In progress (20 Nov 2026, uncommitted)
+## Redesign and security pass (finished 21 Nov 2026)
 
-Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. Do not commit; the owner approves commits.
-- Done on disk: the 26 Oct redesign of every trip screen (pastel-consumer app style, seed 1660474941, sheet in `.taste-skill/app/`); landing page (split-stage direction, seed 1913576966, sheet in `.taste-skill/`; `src/app/page.tsx`, `src/components/landing/`, photos in `public/photos/` with `credits.json`); logo "balance river" in `brand/` (alternatives in `brand/alternatives/`), wired via `src/app/icon.svg`, `apple-icon.png`, `opengraph-image.png`, `manifest.ts`, `MarkIcon`; copyright in LICENSE, README, package.json and the landing footer; before screenshots in `brand/screens/before/` (commit e6de7b6); security audit findings (S1 to S13, report draft in the session scratchpad, to become `docs/security-audit.md`).
-- Hardening done (121 tests green); migration 0001 applied locally; `docs/security-audit.md` written (S1 to S13); HSTS without `preload`; `RATE_LIMIT_SALT` in `.env.example`.
-- Round 1 inspector (20 Nov): trip screens 0 FAIL with `--app` except Plan `emoji` (user reactions are content: run Plan with `--allow emoji`); landing 6 FAIL being fixed (photos at native aspect per the owner's no-crop rule, emoji in fragments, 13px text, margins, covered text, eyebrow, edge text).
-- Done since round 1: landing round-1 fixes (photos at native aspect, unoptimized; no emoji in fragments; 15px+ fragment text; 16/24px margins; inactive states invisible+inert; wordmark-only top row; stacked create section below lg). Trip screens: web-design-guidelines, mobile-native and break-ui fixes (skip link, sheet focus, autocomplete, line-clamps, grapheme initials, settle sr-only table, subgrid river, phone plan rows). All edits lint/tsc clean but NOT yet seen in a render. Worst-case trips in the local DB: /t/coorg-and-wayanad-xx-rjxwns764n5zv493 and /t/q-udgsan3fk6mjcfxv.
-- RESUME HERE (paused 20 Nov 21:50 at usage limit): builds are blocked: Turbopack timed out on the Tailwind loader under load, and `next build` (webpack too) now stops with a security-upgrade notice until next is upgraded. package.json already says 16.4.6 for next and eslint-config-next; run the install through the lock first, then `npm run build`, `npx next start -p 3210`, re-run inspect.mjs on / (page rules) and on each trip screen with `--app` (Plan with `--allow emoji`), fix to 0 FAIL, look at every render; then after screenshots with the capture script (rewrite needed if scratchpad is gone) into `brand/screens/after/`; then, when `D:/Downloads/MATITHI/tools/npm-install.lock` is free, bump `next` and `eslint-config-next` to 16.4.6 (audit S12) via the lock, final `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`; stop the server; report. No commit.
+Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. The owner committed a work-in-progress snapshot (ee1bd70, d38d4dc) on 21 Nov; the last landing fixes, these docs updates, the lockfile for next 16.4.6 and `brand/screens/after/` are NOT committed yet. The owner approves commits.
+- Trip screens: pastel-consumer app style (tasteskill seed 1660474941, sheet in `.taste-skill/app/`). Landing: split-stage direction (seed 1913576966, sheet in `.taste-skill/`), in `src/app/page.tsx` and `src/components/landing/`, photos in `public/photos/` with `credits.json`.
+- Logo "balance river" in `brand/` (alternatives wordmark-slice and torn-ticket in `brand/alternatives/`), wired via `src/app/icon.svg`, `apple-icon.png`, `opengraph-image.png`, `twitter-image.png`, `manifest.ts` and `MarkIcon`.
+- Copyright line in LICENSE, README, package.json (`author`, `UNLICENSED`) and the landing footer.
+- Security: `docs/security-audit.md` (S1 to S13) and the hardening (CSPRNG slugs, Postgres rate limiter with migration 0001, text sanitising, static CSP, HSTS without preload, cookie flags, 64kb body limit, dependabot, SECURITY.md). next and eslint-config-next are on 16.4.6 (audit S12).
+- Inspector (21 Nov, production build, 1440/768/390): landing and every trip screen 0 FAIL. Plan runs with `--allow emoji`. Kept WARNs and why are in design.md "Design checks". Last landing fixes: footer credits at 16px body size, the output names wrap on a phone instead of scrolling to the edge, and the wordmark is a top bar above the photo below `lg` (it read as an eyebrow).
+- Screenshots: `brand/screens/before/` (commit e6de7b6) and `brand/screens/after/` (32 each: 8 routes at 1440 and 390, light and dark).
+- Gates on 21 Nov: `npm test` 121 passed, `npx tsc --noEmit` clean, `npm run lint` clean, `npm run build` green (Turbopack, about 10 min on this machine).
+- Not verified: headers on a real deployment, real phone hardware, Vercel env.
+- Needs the owner: a contact address for SECURITY.md, `RATE_LIMIT_SALT` set in Vercel, whether the demo trip should be read-only, and approval to commit.
+- Worst-case trips in the local DB for break-ui: /t/coorg-and-wayanad-xx-rjxwns764n5zv493 and /t/q-udgsan3fk6mjcfxv.
 
 ## How to run
 

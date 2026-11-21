@@ -16,6 +16,13 @@ const LINK = `inline-flex min-h-11 items-center ${BODY} underline decoration-fro
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className={`${MARGIN} pt-4 md:pt-6 lg:grid lg:grid-cols-2 lg:gap-3`}>
+      {/* Below lg the wordmark is the page's top bar, above the photograph. */}
+      <header className="flex min-h-12 items-center pb-3 lg:hidden">
+        <p className="inline-flex items-center gap-2 text-base font-semibold">
+          <MarkIcon className="text-accent" />
+          Tripsplit
+        </p>
+      </header>
       {/* On a phone the photograph leads; on desktop it is the sticky right half. */}
       <div className="h-[48svh] lg:sticky lg:top-6 lg:order-2 lg:h-[calc(100svh-3rem)]">
         <HeroSlides slides={SLIDES} />
@@ -25,11 +32,11 @@ export function Hero() {
         <Stripe animate className="h-10 shrink-0 lg:h-14" />
         <div className="flex flex-1 flex-col p-4 pb-6 lg:p-12 lg:pb-8">
           {/* A plain top bar: the wordmark alone, well clear of the headline block below. */}
-          <p className="landing-in inline-flex items-center gap-2 text-base font-semibold">
+          <p className="landing-in hidden items-center gap-2 text-base font-semibold lg:inline-flex">
             <MarkIcon className="text-accent" />
             Tripsplit
           </p>
-          <h1 className={`${DISPLAY} landing-in mt-16 lg:mt-[16vh]`} style={{ "--d": "80ms" } as React.CSSProperties}>
+          <h1 className={`${DISPLAY} landing-in mt-4 lg:mt-[16vh]`} style={{ "--d": "80ms" } as React.CSSProperties}>
             <span className="block">Plan the trip.</span>
             <span className="block">Split the bill.</span>
           </h1>

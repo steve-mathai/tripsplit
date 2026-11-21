@@ -162,7 +162,16 @@ Screenshots are in [docs/screenshots](screenshots/): `hero.png` (plan, expenses 
 
 ### Landing (`/`)
 
-A page in the same system, not a hero. A header with the mark and wordmark, then two columns from `lg`: on the left the headline "Plan the trip. Split the bill." (40px, 48px from `lg`), one sentence, a near-black "Create a trip" button that jumps to the form, and a secondary "Open the demo trip". On the right, a real piece of the product as live markup: the Settle screen for a made-up "Coorg weekend" with five people, a balance river and three payments. Below: "How it works" as three plain steps in a divided list (Plan together, Split fairly, Settle in a few taps), the "Create a trip" form, and a footnote: "Anyone with a trip link can view and edit it, so share it only with your group." No eyebrow label, no gradient and no icon cards. Form labels: Trip name, Where are you staying?, Starts, Ends, Your name, The others. The submit button reads "Creating…" while pending. This page is static (no database read).
+Built with tasteskill v2 in the "split-stage" direction (seed 1913576966; the sheet is in `.taste-skill/`). One font (Manrope) on four steps from `src/components/landing/type.ts`: display, title, lead (20px) and body (16px). One pair of outer margins: 16px on a phone, 24px from tablet up.
+
+- Hero: from `lg`, two halves. On the left a surface panel with the colour stripe (one cell per person tint), the wordmark, "Plan the trip. Split the bill.", one sentence, a near-black "Create a trip" and three underlined links (Open the demo trip, How it works, What it does). On the right a sticky stage with three Kerala photographs. Below `lg` the wordmark is a top bar, the photograph comes first and the panel overlaps its foot.
+- "What the group gets": four outputs (The day plan, Every bill, Who pays whom, The message for the group). Picking one swaps the stage to that real sheet, rendered as live markup from the demo data. On a phone the four names wrap; they never scroll sideways.
+- "What's included": a receipt on the accent-soft band, with dotted leaders between each feature and its figure.
+- "How it works": three steps (Drop one link in the group, Add what you spend, Settle in a few payments), each beside a cropped interface fragment that pins while its text scrolls.
+- "Create a trip": the form (Trip name, Where are you staying?, Starts, Ends, Your name, The others). The submit reads "Creating…" while pending.
+- Footer: the fishing-net photograph beside a large menu, the photo credits, a note that the demo people are made up, and "© 2026 Steve Mathai Mathew. All rights reserved."
+
+Photographs are Wikimedia Commons files listed in `public/photos/credits.json`. They are shown whole at their own aspect ratio on a flat field, `unoptimized`: no crop, zoom, tint, mask or overlay (the owner's rule). The interface fragments carry `data-ui` so the inspector measures them as product, not page type. The page is static (no database read).
 
 ### Plan (`/t/<slug>`)
 
@@ -261,6 +270,21 @@ Contrast, computed with the WCAG formula from the token values in [globals.css](
 | Control border on surface | 1.4 and 1.7 |
 
 Known gaps: the control border (inputs, secondary buttons, chips) is far below the 3:1 that WCAG 1.4.11 asks for on component outlines, in both themes; the label, text and placement identify each control, but the outline alone does not. Tab labels are 11px. Sheets do not trap focus or return it to the trigger. Vote chips explain who voted only through a `title`, which touch screens do not show. There is no skip link.
+
+## Design checks (21 Nov 2026)
+
+The tasteskill inspector ran on a production build (`next start`) at 1440, 768 and 390px. Landing with the page rules, each trip screen with `--app`, and Plan with `--allow emoji` because the emoji there are user reactions, not interface. All screens: 0 FAIL. The WARNs that remain are kept on purpose:
+
+| Screen | WARN | Why it stays |
+| --- | --- | --- |
+| Landing | no-footage | No honest clip of a group splitting a bill; the three photographs carry the place. |
+| Landing | off-centre, blank-gap | The hero photographs sit whole at their own ratio on a flat field, so the stage has empty bands beside them. Cropping to fill would break the no-crop rule. |
+| Plan | below-fold | A trip is long; the day chips and "Jump to a day" list reach the rest. |
+| Expense form | icon-chips | The pastel category tiles are the style's one move for categories. |
+| Expense form, Settle, Summary, People | ragged-row | The side column is shorter than the main list by nature. |
+| Not found | hero-void | A short message on an empty page is the right weight for a dead link. |
+
+The web-design-guidelines, mobile-native (390px) and break-ui passes were done on the trip screens; their fixes are in the code (skip link, sheet focus, autocomplete, line clamps, grapheme-safe initials, a screen-reader table for Settle, phone plan rows). Before and after screenshots are in `brand/screens/before/` and `brand/screens/after/` (1440 and 390px, light and dark). Phone hardware was not tested.
 
 ## Copy tone
 
