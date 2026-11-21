@@ -104,9 +104,11 @@ Demo
 ## Where I stopped (21 Nov 2026, FINISH-TODAY.md)
 
 Owner's order: finish everything under Build today; commit locally when green; no push, no deploy.
-- Redesign + security pass committed locally (see the next section).
-- Wave 1 running: phase 9 settlements + phase 11 rounding + read-only demo default; phase 10 live refresh + phase 14 quick add; deploy config (vercel.json sin1, docs/deploy.md), RATE_LIMIT_SALT fallback from DATABASE_URL, SECURITY.md via GitHub private reporting.
-- Next: review wave 1, then phase 12 change log and phase 13 PIN, then build + browser check + commit.
+- Done and committed locally: redesign + security pass; phase 9 settlements, phase 10 live refresh, phase 11 whole-rupee rounding, phase 14 quick add; read-only demo default in production; RATE_LIMIT_SALT falls back to a hash of DATABASE_URL; SECURITY.md uses GitHub private reporting; deploy config (vercel.json region sin1, docs/deploy.md).
+- Browser check (21 Nov, production build, headless Chrome at 390px, two separate browsers): Mark paid took the demo from 8 to 7 payments at once and survived a reload; Remove restored it; the second browser showed the change after 13s with no reload; `?round=1` gave whole-rupee transfers and the drift line; quick add previewed "₹450 for chai, paid by Meera. Food, split equally among 11." Demo data restored afterwards (10 payments). Fixed during the check: the round toggle chips had no selected state (`data-active` must be "true").
+- Not done (skipped to save the weekly budget, no owner decision needed): phase 12 change log and undo, phase 13 optional trip PIN. Phase 10 criterion 4 (measured query volume) needs a real deployment.
+- Known issue: two phones tapping Mark paid on the same transfer at the same moment can both record it (check then insert, not atomic). The extra one shows in "Payments made" and can be removed.
+- Gotchas: the built-in browser pane throttles requestAnimationFrame, so React's streamed Suspense reveal never runs there and the page looks dead; test in headless Chrome. A background tab pauses live refresh by design, so test two browsers, not two tabs. Under heavy machine load the first server action can take 20s or more.
 
 ## Waiting on owner
 
@@ -118,7 +120,7 @@ Owner's order: finish everything under Build today; commit locally when green; n
 
 ## Redesign and security pass (finished 21 Nov 2026)
 
-Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. The owner committed a work-in-progress snapshot (ee1bd70, d38d4dc) on 21 Nov; the last landing fixes, these docs updates, the lockfile for next 16.4.6 and `brand/screens/after/` are NOT committed yet. The owner approves commits.
+Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. Committed locally on 21 Nov (owner snapshots ee1bd70, d38d4dc, 3bd9703; d30dd6f and later). Nothing is pushed.
 - Trip screens: pastel-consumer app style (tasteskill seed 1660474941, sheet in `.taste-skill/app/`). Landing: split-stage direction (seed 1913576966, sheet in `.taste-skill/`), in `src/app/page.tsx` and `src/components/landing/`, photos in `public/photos/` with `credits.json`.
 - Logo "balance river" in `brand/` (alternatives wordmark-slice and torn-ticket in `brand/alternatives/`), wired via `src/app/icon.svg`, `apple-icon.png`, `opengraph-image.png`, `twitter-image.png`, `manifest.ts` and `MarkIcon`.
 - Copyright line in LICENSE, README, package.json (`author`, `UNLICENSED`) and the landing footer.

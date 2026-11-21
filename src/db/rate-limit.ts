@@ -12,7 +12,7 @@ type Executor = Pick<Db, "execute">;
  * from DATABASE_URL, so production IP hashes are never unsalted when the variable is forgotten.
  * Empty only when both are unset (local PGlite), where nothing leaves the machine.
  */
-export function rateLimitSalt(env: { RATE_LIMIT_SALT?: string; DATABASE_URL?: string } = process.env): string {
+export function rateLimitSalt(env: Record<string, string | undefined> = process.env): string {
   // An empty RATE_LIMIT_SALT counts as unset, so a blank Vercel variable still gets the fallback.
   if (env.RATE_LIMIT_SALT) return env.RATE_LIMIT_SALT;
   if (env.DATABASE_URL) return createHash("sha256").update(env.DATABASE_URL).digest("hex");

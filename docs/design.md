@@ -114,7 +114,7 @@ The sign carries the meaning, so ordinary amounts need no colour. [money-sign.ts
 | --- | --- | --- |
 | Gets back | `+₹1,200` | `--positive` (green) |
 | Owes | `−₹1,200` with the true minus sign U+2212 | Ink, never red |
-| Zero | `settled` | `--muted` (grey) |
+| Zero | `settled up` | `--muted` (grey) |
 
 Expense rows and totals are plain ink at 600. Red is kept for errors and for an exact split that is over the total.
 
@@ -195,7 +195,7 @@ The Split card has a segmented control (Equally, Exact, Shares: a pill track wit
 
 "Who pays whom, and how much?" The title is "10 payments settle everyone" (the count is computed) with one sentence found in the data, for example "Most money goes back to Aarav, who is owed ₹24,729.47 after paying ₹27,500 for the homestay."
 
-The balance river is the signature element. One card, one row per person: avatar and name, a track around a centre zero line, and the amount. A creditor's bar grows right in `--accent`, a debtor's grows left in ink at 70%, and both use one scale, the largest balance on the trip. The amount is the signed figure (`+₹x`, `−₹x`, or a grey "settled" with no bar). Rows are sorted from the biggest "gets back" to the biggest "owes". A visually hidden table carries the same data for screen readers.
+The balance river is the signature element. One card, one row per person: avatar and name, a track around a centre zero line, and the amount. A creditor's bar grows right in `--accent`, a debtor's grows left in ink at 70%, and both use one scale, the largest balance on the trip. The amount is the signed figure (`+₹x`, `−₹x`, or a grey "settled up" with no bar). Rows are sorted from the biggest "gets back" to the biggest "owes". A visually hidden table carries the same data for screen readers.
 
 Then "Payments" in one white card: two overlapping 28px avatars, "Zoya pays Aarav", the amount at 16px/600 ink, and an icon button that copies the line and announces "Copied". If the receiver has a UPI id a "Pay ₹6,772 via UPI" text link sits under the line. Under the card, "Copy all" (primary) and "Send on WhatsApp" (secondary, with the glyph in its own green), then a note that this is the fewest payments. "Paid and share" lists each person with "Paid ₹X · Share ₹Y" and their signed balance. From `lg` the river and "Paid and share" are on the left and the payments on the right.
 
@@ -218,7 +218,7 @@ The trip layout wraps every tab with the top bar, the title row, the identity ba
 | Loading a trip | The shell skeleton (sidebar column at `lg`, top bar, title bars, cards), then per-route flat bars inside cards: 4 on Plan, 5 slim on Expenses, 4 on Settle, 4 tall on Summary, 1 tall on People, 3 on the expense form |
 | Empty day | "Nothing here yet. Add the first thing." |
 | No expenses | "No expenses yet. Add the first one and the maths takes care of itself." A category filter with no matches says "No food expenses yet." The page frame stays |
-| Everyone square | Heading "Everyone is settled", no river and no payments, only the "Paid and share" list |
+| Everyone square | Heading "Everyone is settled up", no river and no payments, only the "Paid and share" list |
 | No expenses in Summary | Per-day card says "No expenses yet." and the ring is an empty track with nothing in the hole |
 | No identity | The "Who are you?" banner; tapping a vote opens the same picker as a sheet. The expense form hides the banner and defaults Paid by to the first member |
 | Saving | Buttons change label and disable ("Saving…", "Adding…", "Creating…", "Joining…", "Removing…"); rows and cards dim to 60 to 80% while an action runs |
@@ -236,7 +236,7 @@ What is done:
 - The exact-amount balance line, the vote tally and the "Copied" state are `aria-live`. Errors are `role="alert"`.
 - Sheets are `role="dialog"` with `aria-modal`, a visible Close button, Escape to close, and page scroll lock.
 - The tab bar is a labelled `nav` and marks the current page. Decorative icons, emoji and avatars are `aria-hidden`. The ring, the bullet rows and the stacked bar have `role="img"` labels, the day columns and the balance river have a text twin for screen readers, and charts never rely on colour alone (every segment has a printed amount).
-- Money signs are in the text itself (`+`, `−`, "settled"), so the meaning survives without colour.
+- Money signs are in the text itself (`+`, `−`, "settled up"), so the meaning survives without colour.
 - Every control shows the same 2px focus ring, and icon-only buttons have `aria-label`s.
 - Safe-area insets are applied to the top bar, tab bar, sheets and the expense save bar. The viewport uses `viewport-fit=cover`.
 - Reduced motion switches off the press scale and the sheet animation.

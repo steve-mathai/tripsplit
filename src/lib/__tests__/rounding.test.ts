@@ -49,7 +49,8 @@ describe("roundToRupees", () => {
 
   it("reports drift as the paise moved", () => {
     const before = nets({ a: 1060, b: 2030, c: -3090 });
-    expect(roundingDriftPaise(before, roundToRupees(before))).toBe(40 + 30 + 10);
+    // Moves are +40, -30, -10: 40 paise up and 40 down, so 40 paise are spread.
+    expect(roundingDriftPaise(before, roundToRupees(before))).toBe(40);
   });
 
   it("property: sums to zero, each error under one rupee, whole rupees, same for any input order", () => {
@@ -64,7 +65,7 @@ describe("roundToRupees", () => {
       const rounded = roundToRupees(input);
       expect(rounded.reduce((t, b) => t + b.net, 0), label).toBe(0);
       rounded.forEach((b, i) => {
-        expect(b.net % 100, label).toBe(0);
+        expect(Math.abs(b.net % 100), label).toBe(0);
         expect(Math.abs(b.net - input[i].net), label).toBeLessThan(100);
       });
 

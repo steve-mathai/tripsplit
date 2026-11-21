@@ -10,7 +10,7 @@ export interface MarkPaidInput extends Transfer {
 
 /** Narrows an untrusted "mark paid" request. Trip membership is checked by the caller. */
 export function parseMarkPaidInput(raw: unknown): MarkPaidInput {
-  if (!isRecord(raw)) throw new UserError("That payment could not be read - refresh and try again");
+  if (!isRecord(raw)) throw new UserError("That payment could not be read. Refresh and try again");
   const { from, to, amountPaise, round } = raw;
   if (typeof from !== "string" || typeof to !== "string") throw new UserError("Pick who paid and who received");
   if (from === to) throw new UserError("Someone cannot pay themselves");

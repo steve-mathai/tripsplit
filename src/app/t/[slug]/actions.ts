@@ -208,7 +208,7 @@ export interface NewPlanItemPayload {
 export async function addPlanItemAction(slug: string, payload: NewPlanItemPayload): Promise<ActionResult> {
   return guarded(async () => {
     const trip = await loadTrip(slug);
-    if (!isRecord(payload)) throw new UserError("That plan could not be read - refresh and try again");
+    if (!isRecord(payload)) throw new UserError("That plan could not be read. Refresh and try again");
     await addPlanItem(trip.id, {
       day: payload.day,
       time: payload.time,
@@ -311,7 +311,7 @@ export async function markPaidAction(
       payments.map((p) => ({ from: p.fromMember, to: p.toMember, amountPaise: p.amountPaise })),
     );
     if (!isSuggestedTransfer(planSettlement(balances, input.round).transfers, input)) {
-      throw new UserError("That payment is no longer needed - refresh to see what is left to pay");
+      throw new UserError("That payment is no longer needed. Refresh to see what is left to pay");
     }
     await createSettlement(trip.id, input);
     refresh(slug);

@@ -8,9 +8,10 @@ import { hitCounter, peekCounter } from "../rate-limit";
 // In-memory PGlite (no data directory, so no clash with .data), migrated with the real generated SQL.
 const client = drizzle(new PGlite());
 
+// Booting PGlite (WASM) and running every migration can take well over 10s on a loaded machine.
 beforeAll(async () => {
   await migrate(client, { migrationsFolder: "./drizzle" });
-});
+}, 60_000);
 
 describe("hitCounter", () => {
   it("counts hits in a window, so the 6th hit of a limit of 5 is over it", async () => {

@@ -28,7 +28,10 @@ export function LiveRefresh() {
   const router = useRouter();
   const [refreshing, startTransition] = useTransition();
   const refreshingRef = useRef(false);
-  refreshingRef.current = refreshing;
+  // The interval callback reads this, so it is synced in an effect rather than during render.
+  useEffect(() => {
+    refreshingRef.current = refreshing;
+  }, [refreshing]);
 
   useEffect(() => {
     // Server actions are fetch POSTs tagged with a Next-Action header; counting them covers every vote, save and

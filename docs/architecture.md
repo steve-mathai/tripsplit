@@ -95,6 +95,8 @@ erDiagram
   trips ||--o{ members : has
   trips ||--o{ plan_items : has
   trips ||--o{ expenses : has
+  trips ||--o{ settlements : has
+  members ||--o{ settlements : pays_or_receives
   plan_items ||--o{ votes : receives
   members ||--o{ votes : casts
   expenses ||--o{ expense_splits : split_into
@@ -149,6 +151,13 @@ erDiagram
     text member_id PK
     int weight
   }
+  settlements {
+    text id PK
+    text trip_id FK
+    text from_member FK
+    text to_member FK
+    int amount_paise
+  }
 ```
 
 Every table also has `created_at timestamptz default now()` except `votes` and `expense_splits`.
@@ -161,6 +170,7 @@ Every table also has `created_at timestamptz default now()` except `votes` and `
 | `vote in ('up','down')`, `emoji in (🔥 😍 😴 💸 🤔)` | votes | Enums as checks. Both columns are nullable: one row holds one vote and one emoji. |
 | `amount_paise > 0`, category in four values, split mode in three | expenses | Last line of defence behind the app validation |
 | `weight >= 0` | expense_splits | Weights are never negative |
+| `amount_paise > 0`, `from_member <> to_member` | settlements | A recorded payment moves a positive amount between two different people. `trip_id` cascades; the two member keys do not, so a member in a payment cannot be deleted (`removeMember` checks first). |
 | `trip_id` cascades on delete | members, plan_items, expenses | Deleting a trip (the seed does this) removes everything under it |
 | `expense_splits.expense_id` and `votes.*` cascade | | Deleting an expense or plan item cleans up |
 | `expenses.paid_by`, `expense_splits.member_id` do not cascade | | A member who paid or sits in a split cannot be deleted. `removeMember` checks first and gives a friendly error. |

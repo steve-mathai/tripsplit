@@ -50,10 +50,10 @@ function formatPaidAt(date: Date): string {
 function RoundToggle({ slug, round }: { slug: string; round: boolean }) {
   return (
     <div className="flex gap-2" role="group" aria-label="Amounts">
-      <Link href={`/t/${slug}/settle`} className="chip" data-active={round ? undefined : ""} aria-current={round ? undefined : "true"} replace>
+      <Link href={`/t/${slug}/settle`} className="chip" data-active={round ? undefined : "true"} aria-current={round ? undefined : "true"} replace>
         Exact amounts
       </Link>
-      <Link href={`/t/${slug}/settle?round=1`} className="chip" data-active={round ? "" : undefined} aria-current={round ? "true" : undefined} replace>
+      <Link href={`/t/${slug}/settle?round=1`} className="chip" data-active={round ? "true" : undefined} aria-current={round ? "true" : undefined} replace>
         Whole rupees
       </Link>
     </div>

@@ -57,6 +57,8 @@ Risks: cold starts on a free tier; the Google Fonts download at build needs netw
 
 ### Phase 9: Record settlements ("mark as paid")
 
+Status: built 21 Nov 2026 (migration `0002_settlements`). Unit tests and type check pass. Browser check 21 Nov: Mark paid, reload and Remove work on Settle.
+
 Scope: a `settlements` table (`id`, `trip_id`, `from_member`, `to_member`, `amount_paise` greater than 0, `created_at`, check `from_member <> to_member`, foreign keys without cascade on members). `computeBalances` takes settlements as a second list: the payer's `paid` side rises and the receiver's falls, so nets still sum to zero. Settlements are not spend, so `summarize` is unchanged.
 
 UI: a "Mark paid" action on each transfer card records that exact amount. A "Payments made" list on the Settle tab shows who paid whom and when, with a remove button.
@@ -84,7 +86,7 @@ Acceptance criteria:
 
 Risks: Neon compute hours, and a refresh flicker on slow phones.
 
-Status (21 Nov 2026): built in [live-refresh.tsx](../src/components/live-refresh.tsx), mounted in the trip layout. Criteria 1 to 3 need a two-phone check; criterion 4 is still open because the number below is an estimate, not a measurement.
+Status (21 Nov 2026): built in [live-refresh.tsx](../src/components/live-refresh.tsx), mounted in the trip layout. Criterion 1 checked 21 Nov with two separate browsers (the change showed after 13s); criteria 2 and 3 follow from the code (visibility pause, refresh hold) and still want a phone check; criterion 4 is still open because the number below is an estimate, not a measurement.
 
 Estimated query volume (not measured). Assumptions: 11 tabs open and visible for one hour, one refresh every 15 seconds each, and about 8 database queries per refresh. Eight comes from reading the code, not from a query log: the layout, `generateMetadata` and the page each call `getTripBySlug` (2 queries each, no memoisation), and the page adds 2 more for its own data. Hidden tabs do not poll, so this is the worst case.
 - Refreshes: 11 tabs x 4 a minute x 60 = 2,640 an hour, about 0.73 a second.
@@ -94,6 +96,8 @@ Estimated query volume (not measured). Assumptions: 11 tabs open and visible for
 - To replace this with a measurement: open 11 tabs on the deployed trip for an hour and read the query count and compute time from the Neon console, then record it in [memory.md](memory.md).
 
 ### Phase 11: Round to whole rupees
+
+Status: built 21 Nov 2026 (`src/lib/rounding.ts`, `src/lib/settle-plan.ts`). Unit tests and type check pass. Browser check 21 Nov: whole-rupee transfers and the drift line show with `?round=1`.
 
 Scope: a toggle on the Settle tab (state in the URL as `?round=1` so the shared WhatsApp list matches what the sender saw). Rounding is applied to the balances before settling, not to payments afterwards, so the rounded balances still sum to zero and `minimumTransfers` stays valid. Use largest remainder across members to distribute the odd paise.
 
@@ -144,7 +148,7 @@ Acceptance criteria:
 4. Parser unit tests include rupee symbols, commas, paise, names with spaces, and no-match cases.
 5. Saving goes through `createExpense` unchanged, so every existing validation still applies.
 
-Status (21 Nov 2026): built. Parser in [quick-add.ts](../src/lib/quick-add.ts) with tests, text box in [quick-add.tsx](../src/components/quick-add.tsx). It saves through `saveExpenseAction` (which calls `createExpense`) rather than `createExpense` directly, so the server-side payload validation applies too. Needs a browser check.
+Status (21 Nov 2026): built. Parser in [quick-add.ts](../src/lib/quick-add.ts) with tests, text box in [quick-add.tsx](../src/components/quick-add.tsx). It saves through `saveExpenseAction` (which calls `createExpense`) rather than `createExpense` directly, so the server-side payload validation applies too. Browser check 21 Nov: the preview line renders correctly; saving was not exercised in the browser.
 
 ### Phase 15: Receipt photos
 
