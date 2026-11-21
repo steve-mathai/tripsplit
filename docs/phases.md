@@ -84,6 +84,15 @@ Acceptance criteria:
 
 Risks: Neon compute hours, and a refresh flicker on slow phones.
 
+Status (21 Nov 2026): built in [live-refresh.tsx](../src/components/live-refresh.tsx), mounted in the trip layout. Criteria 1 to 3 need a two-phone check; criterion 4 is still open because the number below is an estimate, not a measurement.
+
+Estimated query volume (not measured). Assumptions: 11 tabs open and visible for one hour, one refresh every 15 seconds each, and about 8 database queries per refresh. Eight comes from reading the code, not from a query log: the layout, `generateMetadata` and the page each call `getTripBySlug` (2 queries each, no memoisation), and the page adds 2 more for its own data. Hidden tabs do not poll, so this is the worst case.
+- Refreshes: 11 tabs x 4 a minute x 60 = 2,640 an hour, about 0.73 a second.
+- Queries: 2,640 x 8 = about 21,000 an hour, about 6 a second. Quiet pages (Settle, Summary) may run a few more, so treat the range as 15,000 to 27,000.
+- Neon free tier: queries are not billed, compute time is. A refresh every 15 seconds is well inside Neon's idle suspend window (5 minutes, as I understand it), so the database stays awake for as long as any tab is visible. At the smallest compute size (0.25 CU, as I understand it) one hour awake costs about 0.25 compute-hours, against a free allowance of about 100 compute-hours a month (also from memory). That is about 0.25% of the month per hour of polling, or roughly 400 hours of continuous polling in total. Check both figures against Neon's current pricing page before relying on them.
+- Also worth knowing: each refresh is one Vercel function invocation, so 2,640 an hour for this scenario.
+- To replace this with a measurement: open 11 tabs on the deployed trip for an hour and read the query count and compute time from the Neon console, then record it in [memory.md](memory.md).
+
 ### Phase 11: Round to whole rupees
 
 Scope: a toggle on the Settle tab (state in the URL as `?round=1` so the shared WhatsApp list matches what the sender saw). Rounding is applied to the balances before settling, not to payments afterwards, so the rounded balances still sum to zero and `minimumTransfers` stays valid. Use largest remainder across members to distribute the odd paise.
@@ -134,6 +143,8 @@ Acceptance criteria:
 3. Ambiguous or missing amounts fall back to the full form with whatever was understood filled in.
 4. Parser unit tests include rupee symbols, commas, paise, names with spaces, and no-match cases.
 5. Saving goes through `createExpense` unchanged, so every existing validation still applies.
+
+Status (21 Nov 2026): built. Parser in [quick-add.ts](../src/lib/quick-add.ts) with tests, text box in [quick-add.tsx](../src/components/quick-add.tsx). It saves through `saveExpenseAction` (which calls `createExpense`) rather than `createExpense` directly, so the server-side payload validation applies too. Needs a browser check.
 
 ### Phase 15: Receipt photos
 

@@ -101,6 +101,21 @@ Demo
 - The UI date range uses an en dash. The no-dash rule applies to docs and new copy, not to that existing format.
 - No automated tests for `queries.ts`, server actions or components.
 
+## Where I stopped (21 Nov 2026, FINISH-TODAY.md)
+
+Owner's order: finish everything under Build today; commit locally when green; no push, no deploy.
+- Redesign + security pass committed locally (see the next section).
+- Wave 1 running: phase 9 settlements + phase 11 rounding + read-only demo default; phase 10 live refresh + phase 14 quick add; deploy config (vercel.json sin1, docs/deploy.md), RATE_LIMIT_SALT fallback from DATABASE_URL, SECURITY.md via GitHub private reporting.
+- Next: review wave 1, then phase 12 change log and phase 13 PIN, then build + browser check + commit.
+
+## Waiting on owner
+
+1. Deploy: may I create the Neon project and Vercel import and set DATABASE_URL, NEXT_PUBLIC_SITE_URL and RATE_LIMIT_SALT (steps in docs/deploy.md)?
+2. SECURITY.md now points to GitHub private vulnerability reporting on steve-mathai/tripsplit. Do you want an email contact instead, and which address?
+3. The demo trip is read-only in production by default (DEMO_READ_ONLY). Keep it read-only, or editable with a nightly reseed?
+4. Phase 15 receipt photos needs object storage (Vercel Blob) and its cost: approve it?
+5. Push the local commits to GitHub?
+
 ## Redesign and security pass (finished 21 Nov 2026)
 
 Owner asked (via the Project session) for REDESIGN-BRIEF.md plus a security audit. The owner committed a work-in-progress snapshot (ee1bd70, d38d4dc) on 21 Nov; the last landing fixes, these docs updates, the lockfile for next 16.4.6 and `brand/screens/after/` are NOT committed yet. The owner approves commits.

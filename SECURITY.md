@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please report security problems privately by email to the owner, Steve Mathai Mathew, and do not open a public issue. Include the steps to reproduce and the URL pattern involved (never a real trip link). Expect an acknowledgement within a few days.
+Please report security problems privately through GitHub private vulnerability reporting on the repository `steve-mathai/tripsplit`: open its Security tab and choose "Report a vulnerability". Do not open a public issue. Include the steps to reproduce and the URL pattern involved (never a real trip link). Expect an acknowledgement within a few days.
 
 ## Supported versions
 

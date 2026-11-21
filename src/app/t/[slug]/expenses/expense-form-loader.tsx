@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { tripDays } from "@/components/dates";
 import { ExpenseForm, type ExpenseFormInitial } from "@/components/expense-form";
+import { readPrefill } from "@/lib/quick-add";
 import { getExpense, getTripBySlug } from "@/db/queries";
 import { getCurrentMemberId } from "../identity";
 
 /** Today in India (UTC+5:30), as YYYY-MM-DD; trips are planned in IST whatever the server clock says. */
-function todayInIndia(): string {
+export function todayInIndia(): string {
   return new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
@@ -14,9 +15,12 @@ function todayInIndia(): string {
 export async function ExpenseFormLoader({
   params,
   expenseId,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
   expenseId?: Promise<string>;
+  /** Only read for a new expense: Quick add sends what it understood here. */
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await connection();
   const { slug } = await params;
@@ -53,6 +57,7 @@ export async function ExpenseFormLoader({
       defaultPaidBy={currentMemberId ?? trip.members[0]?.id ?? ""}
       defaultDay={days.includes(today) ? today : days[0]}
       initial={initial}
+      prefill={searchParams && !initial ? readPrefill(await searchParams, trip.members.map((m) => m.id)) : undefined}
     />
   );
 }

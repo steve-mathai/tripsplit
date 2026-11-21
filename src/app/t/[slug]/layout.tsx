@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { formatDateRange } from "@/components/dates";
 import { IdentityBanner, IdentityProvider } from "@/components/identity";
+import { LiveRefresh } from "@/components/live-refresh";
 import { ShellSkeleton } from "@/components/skeletons";
 import { TabBar } from "@/components/tab-bar";
 import { TripHeader } from "@/components/trip-header";
@@ -56,6 +57,7 @@ async function TripShell({ params, children }: { params: LayoutProps<"/t/[slug]"
       >
         Skip to content
       </a>
+      <LiveRefresh />
       <TabBar slug={trip.slug} />
       <div className="min-w-0 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+1.5rem)] lg:pb-12">
         <TripHeader

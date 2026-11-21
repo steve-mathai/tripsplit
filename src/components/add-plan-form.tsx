@@ -48,7 +48,8 @@ export function AddPlanForm({ slug, day, dayLabel }: { slug: string; day: string
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 border-t border-rule p-4">
+    // An open form may hold typed text, so live refresh waits until it is closed.
+    <form onSubmit={submit} data-refresh-hold="" className="space-y-3 border-t border-rule p-4">
       <div className="grid grid-cols-[8.5rem_minmax(0,1fr)] gap-3">
         <div>
           <label className="label" htmlFor={`time-${day}`}>

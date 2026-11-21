@@ -1,27 +1,35 @@
 import { computeShares } from "./split";
-import type { Balance, BalanceExpense } from "./types";
+import type { Balance, BalanceExpense, Transfer } from "./types";
 
 /**
  * Per-member paid / owed / net over all expenses, in the order of `members`.
- * Throws when an expense references someone who is not in `members`, because
+ * A settlement (`from` paid `to` in real life) raises the payer's `paid` and lowers the receiver's,
+ * so it moves both nets towards zero and the total stays zero. Settlements are not spend: `owed` is untouched.
+ * Throws when an expense or settlement references someone who is not in `members`, because
  * silently dropping them would break the zero-sum invariant.
  */
 export function computeBalances(
   members: { id: string }[],
   expenses: BalanceExpense[],
+  settlements: Transfer[] = [],
 ): Balance[] {
   const byId = new Map<string, Balance>(
     members.map((m) => [m.id, { memberId: m.id, paid: 0, owed: 0, net: 0 }]),
   );
   const lookup = (id: string): Balance => {
     const balance = byId.get(id);
-    if (!balance) throw new Error(`Expense references unknown member ${id}`);
+    if (!balance) throw new Error(`Expense or settlement references unknown member ${id}`);
     return balance;
   };
 
   for (const expense of expenses) {
     lookup(expense.paidBy).paid += expense.amountPaise;
     for (const [memberId, share] of computeShares(expense)) lookup(memberId).owed += share;
+  }
+
+  for (const settlement of settlements) {
+    lookup(settlement.from).paid += settlement.amountPaise;
+    lookup(settlement.to).paid -= settlement.amountPaise;
   }
 
   const balances = [...byId.values()];

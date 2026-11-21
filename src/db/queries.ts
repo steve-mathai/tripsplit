@@ -2,7 +2,7 @@
 // (under Cache Components these must run inside <Suspense> or after connection()).
 // Multi-step writes go through runAtomically (one transaction on both drivers), so a failure
 // midway never leaves a half-written expense or trip behind.
-import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull, or, sql } from "drizzle-orm";
 import { UserError } from "../lib/errors";
 import { isOneOf, isRecord } from "../lib/guards";
 import { toUserError } from "../lib/pg-errors";
@@ -16,6 +16,7 @@ import {
   MAX_EXPENSES,
   MAX_MEMBERS,
   MAX_PLAN_ITEMS,
+  MAX_SETTLEMENTS,
   MEMBER_COLORS,
   SPLIT_MODES,
   TEXT_LIMITS,
@@ -28,11 +29,12 @@ import {
   type Vote,
 } from "../lib/types";
 import { db, runAtomically } from "./index";
-import { expenseSplits, expenses, members, planItems, trips, votes } from "./schema";
+import { expenseSplits, expenses, members, planItems, settlements, trips, votes } from "./schema";
 
 export type Trip = typeof trips.$inferSelect;
 export type Member = typeof members.$inferSelect;
 export type PlanItem = typeof planItems.$inferSelect;
+export type Settlement = typeof settlements.$inferSelect;
 export type TripWithMembers = Trip & { members: Member[] };
 export type ExpenseWithSplits = typeof expenses.$inferSelect & { splits: SplitInput[] };
 
@@ -232,7 +234,7 @@ export async function updateMember(
   return updated;
 }
 
-/** Refuses when the member paid for an expense or is part of any split. */
+/** Refuses when the member paid for an expense, is part of any split, or is in a recorded payment. */
 export async function removeMember(memberId: string): Promise<void> {
   const [paid] = await db.select({ id: expenses.id }).from(expenses).where(eq(expenses.paidBy, memberId)).limit(1);
   const [shared] = await db
@@ -240,8 +242,16 @@ export async function removeMember(memberId: string): Promise<void> {
     .from(expenseSplits)
     .where(eq(expenseSplits.memberId, memberId))
     .limit(1);
+  const [settled] = await db
+    .select({ id: settlements.id })
+    .from(settlements)
+    .where(or(eq(settlements.fromMember, memberId), eq(settlements.toMember, memberId)))
+    .limit(1);
   if (paid || shared) {
     throw new UserError("This person is part of some expenses, so they cannot be removed");
+  }
+  if (settled) {
+    throw new UserError("This person is part of a recorded payment, so they cannot be removed");
   }
   await db.delete(members).where(eq(members.id, memberId));
 }
@@ -486,4 +496,34 @@ export async function updateExpense(expenseId: string, input: ExpenseInput): Pro
 
 export async function deleteExpense(expenseId: string): Promise<void> {
   await db.delete(expenses).where(eq(expenses.id, expenseId));
+}
+
+// ---------- settlements ----------
+
+/** Oldest first, so the list reads in the order people paid. */
+export async function getSettlements(tripId: string): Promise<Settlement[]> {
+  return db.select().from(settlements).where(eq(settlements.tripId, tripId)).orderBy(asc(settlements.createdAt), asc(settlements.id));
+}
+
+export async function getSettlement(settlementId: string): Promise<Settlement | null> {
+  const [row] = await db.select().from(settlements).where(eq(settlements.id, settlementId)).limit(1);
+  return row ?? null;
+}
+
+/** Callers have already checked both members belong to the trip and the amount is a suggested transfer. */
+export async function createSettlement(
+  tripId: string,
+  input: { from: string; to: string; amountPaise: number },
+): Promise<Settlement> {
+  const [{ total }] = await db.select({ total: count() }).from(settlements).where(eq(settlements.tripId, tripId));
+  assertRoomFor(total, MAX_SETTLEMENTS, "recorded payments");
+  const [row] = await db
+    .insert(settlements)
+    .values({ id: crypto.randomUUID(), tripId, fromMember: input.from, toMember: input.to, amountPaise: input.amountPaise })
+    .returning();
+  return row;
+}
+
+export async function deleteSettlement(settlementId: string): Promise<void> {
+  await db.delete(settlements).where(eq(settlements.id, settlementId));
 }

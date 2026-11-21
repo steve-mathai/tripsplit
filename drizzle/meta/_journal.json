@@ -15,6 +15,13 @@
       "when": 1794034610267,
       "tag": "0001_cultured_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795223475640,
+      "tag": "0002_settlements",
+      "breakpoints": true
     }
   ]
 }

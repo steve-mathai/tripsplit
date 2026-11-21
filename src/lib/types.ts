@@ -78,6 +78,7 @@ export interface Transfer {
 export const MAX_MEMBERS = 50;
 export const MAX_PLAN_ITEMS = 500;
 export const MAX_EXPENSES = 500;
+export const MAX_SETTLEMENTS = 500;
 
 /** Maximum characters per free-text field, enforced server-side after sanitising. */
 export const TEXT_LIMITS = {

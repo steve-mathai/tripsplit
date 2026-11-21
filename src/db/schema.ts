@@ -120,6 +120,30 @@ export const expenseSplits = pgTable(
   ],
 );
 
+// A real-world payment between two members, recorded so it stops showing as owed.
+// Neither member FK cascades: a member in a settlement cannot be deleted (removeMember checks first).
+export const settlements = pgTable(
+  "settlements",
+  {
+    id: text("id").primaryKey(),
+    tripId: text("trip_id")
+      .notNull()
+      .references(() => trips.id, { onDelete: "cascade" }),
+    fromMember: text("from_member")
+      .notNull()
+      .references(() => members.id),
+    toMember: text("to_member")
+      .notNull()
+      .references(() => members.id),
+    amountPaise: integer("amount_paise").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    check("settlements_amount_check", sql`${t.amountPaise} > 0`),
+    check("settlements_distinct_members_check", sql`${t.fromMember} <> ${t.toMember}`),
+  ],
+);
+
 // Fixed-window request counters. `key` is a SHA-256 hash (see lib/rate-limit.ts), never a raw IP.
 export const rateLimits = pgTable("rate_limits", {
   key: text("key").primaryKey(),

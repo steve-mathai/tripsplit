@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { sql, type SQL } from "drizzle-orm";
 import { headers } from "next/headers";
 import { UserError } from "../lib/errors";
@@ -5,6 +6,18 @@ import { clientIp, rateLimitKey } from "../lib/rate-limit";
 import { db, type Db } from "./index";
 
 type Executor = Pick<Db, "execute">;
+
+/**
+ * Salt for hashing client IPs. An explicit RATE_LIMIT_SALT wins. Without it, the salt is derived
+ * from DATABASE_URL, so production IP hashes are never unsalted when the variable is forgotten.
+ * Empty only when both are unset (local PGlite), where nothing leaves the machine.
+ */
+export function rateLimitSalt(env: { RATE_LIMIT_SALT?: string; DATABASE_URL?: string } = process.env): string {
+  // An empty RATE_LIMIT_SALT counts as unset, so a blank Vercel variable still gets the fallback.
+  if (env.RATE_LIMIT_SALT) return env.RATE_LIMIT_SALT;
+  if (env.DATABASE_URL) return createHash("sha256").update(env.DATABASE_URL).digest("hex");
+  return "";
+}
 
 type CountRow = { count: number | string };
 
@@ -54,7 +67,7 @@ export interface Bucket {
 
 async function currentKey(bucket: Bucket, tripId?: string): Promise<string> {
   const requestHeaders = await headers();
-  return rateLimitKey(clientIp((name) => requestHeaders.get(name)), bucket.action, tripId, process.env.RATE_LIMIT_SALT);
+  return rateLimitKey(clientIp((name) => requestHeaders.get(name)), bucket.action, tripId, rateLimitSalt());
 }
 
 /**

@@ -1,24 +1,62 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Avatar } from "@/components/avatar";
 import { MONEY_TONE_CLASS, signedINR } from "@/components/money-sign";
 import { CardSkeleton } from "@/components/skeletons";
-import { SettleAllActions, TransferCard, type SettleLine, type SettleParty } from "@/components/settle-cards";
-import { getExpenses, getTripBySlug } from "@/db/queries";
+import {
+  PaymentMadeRow,
+  SettleAllActions,
+  TransferCard,
+  type PaymentMade,
+  type SettleLine,
+  type SettleParty,
+} from "@/components/settle-cards";
+import { getExpenses, getSettlements, getTripBySlug } from "@/db/queries";
 import { computeBalances } from "@/lib/balances";
 import { formatINR } from "@/lib/money";
-import { minimumTransfers } from "@/lib/settle";
+import { planSettlement } from "@/lib/settle-plan";
 import type { Balance } from "@/lib/types";
 import { toMathsExpenses } from "../maths-input";
 
 export const metadata = { title: "Settle up" };
 
-export default function SettlePage({ params }: PageProps<"/t/[slug]/settle">) {
+export default function SettlePage({ params, searchParams }: PageProps<"/t/[slug]/settle">) {
   return (
     <Suspense fallback={<CardSkeleton count={4} height="h-16" />}>
-      <SettleContent params={params} />
+      <SettleContent params={params} searchParams={searchParams} />
     </Suspense>
+  );
+}
+
+const PAID_AT_FORMAT = new Intl.DateTimeFormat("en-IN", {
+  timeZone: "Asia/Kolkata",
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+/** "Fri 30 Oct, 6:00 pm" in India time, built from parts so the punctuation does not depend on the ICU version. */
+function formatPaidAt(date: Date): string {
+  const part = (type: Intl.DateTimeFormatPartTypes) => PAID_AT_FORMAT.formatToParts(date).find((p) => p.type === type)?.value ?? "";
+  return `${part("weekday")} ${part("day")} ${part("month")}, ${part("hour")}:${part("minute")} ${part("dayPeriod").toLowerCase()}`;
+}
+
+/** Exact versus whole-rupee view; the choice lives in the URL so a shared WhatsApp list matches what the sender saw. */
+function RoundToggle({ slug, round }: { slug: string; round: boolean }) {
+  return (
+    <div className="flex gap-2" role="group" aria-label="Amounts">
+      <Link href={`/t/${slug}/settle`} className="chip" data-active={round ? undefined : ""} aria-current={round ? undefined : "true"} replace>
+        Exact amounts
+      </Link>
+      <Link href={`/t/${slug}/settle?round=1`} className="chip" data-active={round ? "" : undefined} aria-current={round ? "true" : undefined} replace>
+        Whole rupees
+      </Link>
+    </div>
   );
 }
 
@@ -92,15 +130,29 @@ function BalanceRiver({ rows }: { rows: { balance: Balance; person: SettleParty 
   );
 }
 
-async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">["params"] }) {
+async function SettleContent({
+  params,
+  searchParams,
+}: {
+  params: PageProps<"/t/[slug]/settle">["params"];
+  searchParams: PageProps<"/t/[slug]/settle">["searchParams"];
+}) {
   await connection();
   const { slug } = await params;
+  const round = (await searchParams).round === "1";
   const trip = await getTripBySlug(slug);
   if (!trip) notFound();
-  const expenses = await getExpenses(trip.id);
+  const [expenses, payments] = await Promise.all([getExpenses(trip.id), getSettlements(trip.id)]);
 
-  const balances = computeBalances(trip.members, toMathsExpenses(expenses));
-  const transfers = minimumTransfers(balances);
+  const trueBalances = computeBalances(
+    trip.members,
+    toMathsExpenses(expenses),
+    payments.map((p) => ({ from: p.fromMember, to: p.toMember, amountPaise: p.amountPaise })),
+  );
+  // Rounding applies to what is left after settlements; the rows below show the nets the transfers settle.
+  const { nets, transfers, driftPaise } = planSettlement(trueBalances, round);
+  const netById = new Map(nets.map((n) => [n.memberId, n.net]));
+  const balances = trueBalances.map((b) => ({ ...b, net: netById.get(b.memberId) ?? b.net }));
   const memberById = new Map(trip.members.map((m) => [m.id, m]));
   const party = (id: string): SettleParty => {
     const m = memberById.get(id)!;
@@ -111,8 +163,16 @@ async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">
     .map((balance) => ({ balance, person: party(balance.memberId) }))
     .sort((a, b) => b.balance.net - a.balance.net || a.person.name.localeCompare(b.person.name));
 
+  const paymentsMade: PaymentMade[] = payments.map((p) => ({
+    id: p.id,
+    from: party(p.fromMember),
+    to: party(p.toMember),
+    amountPaise: p.amountPaise,
+    paidAt: formatPaidAt(p.createdAt),
+  }));
+
   const heading =
-    lines.length === 0 ? "Everyone is settled" : `${lines.length} ${lines.length === 1 ? "payment settles" : "payments settle"} everyone`;
+    lines.length === 0 ? "Everyone is settled up" : `${lines.length} ${lines.length === 1 ? "payment settles" : "payments settle"} everyone`;
 
   // One sentence built from the data: who is owed most, and the biggest thing they paid for.
   const topCreditor = rows[0] && rows[0].balance.net > 0 ? rows[0] : null;
@@ -127,6 +187,17 @@ async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">
   } else {
     finding = expenses.length === 0 ? "No expenses yet, so nobody owes anything." : "Every balance is zero.";
   }
+
+  const paymentsMadeList = paymentsMade.length > 0 && (
+    <section>
+      <h3 className="mb-2 text-sm font-medium text-muted">Payments made</h3>
+      <ul className="card divide-y divide-rule overflow-hidden">
+        {paymentsMade.map((payment) => (
+          <PaymentMadeRow key={payment.id} slug={trip.slug} payment={payment} />
+        ))}
+      </ul>
+    </section>
+  );
 
   const balancesDetail = (
     <>
@@ -158,8 +229,20 @@ async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">
         <p className="mt-1 text-base text-muted [overflow-wrap:anywhere]">{finding}</p>
       </header>
 
+      <RoundToggle slug={trip.slug} round={round} />
+      {round && (
+        <p className="text-sm text-muted" aria-live="polite">
+          {driftPaise > 0
+            ? `${formatINR(driftPaise)} of rounding is spread across the group.`
+            : "Every balance is already a whole number of rupees, so nothing was rounded."}
+        </p>
+      )}
+
       {lines.length === 0 ? (
-        <section>{balancesDetail}</section>
+        <div className="space-y-4">
+          {paymentsMadeList}
+          <section>{balancesDetail}</section>
+        </div>
       ) : (
         <div className="wide-2col lg:items-start">
           <section className="lg:col-start-1 lg:row-start-1">
@@ -171,7 +254,7 @@ async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">
             <h3 className="mb-2 text-sm font-medium text-muted">Payments</h3>
             <ul className="card divide-y divide-rule overflow-hidden">
               {lines.map((line) => (
-                <TransferCard key={`${line.from.id}-${line.to.id}`} line={line} tripName={trip.name} />
+                <TransferCard key={`${line.from.id}-${line.to.id}`} slug={trip.slug} line={line} tripName={trip.name} round={round} />
               ))}
             </ul>
             <SettleAllActions lines={lines} tripName={trip.name} />
@@ -181,7 +264,10 @@ async function SettleContent({ params }: { params: PageProps<"/t/[slug]/settle">
             </p>
           </section>
 
-          <section className="lg:col-start-1 lg:row-start-2">{balancesDetail}</section>
+          <section className="space-y-4 lg:col-start-1 lg:row-start-2">
+            {balancesDetail}
+            {paymentsMadeList}
+          </section>
         </div>
       )}
     </div>

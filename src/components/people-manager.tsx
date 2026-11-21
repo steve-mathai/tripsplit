@@ -179,7 +179,7 @@ export function PeopleManager({ slug, people, currentMemberId }: { slug: string;
       <div>
         <h2 className="text-section">People</h2>
         <p className="mt-1 text-sm text-muted">
-          Add a UPI id so friends can pay you straight from the Settle tab. Names can only be removed before they appear in any expense.
+          Add a UPI id so friends can pay you straight from the Settle tab. Names can only be removed before they appear in any expense or payment.
         </p>
       </div>
 

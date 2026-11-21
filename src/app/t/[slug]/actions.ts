@@ -6,11 +6,16 @@ import {
   addMember,
   addPlanItem,
   createExpense,
+  createSettlement,
   createTrip,
   deleteExpense,
   deletePlanItem,
+  deleteSettlement,
   getExpense,
+  getExpenses,
   getPlanItems,
+  getSettlement,
+  getSettlements,
   getTripBySlug,
   lockInOption,
   parseExpenseInput,
@@ -22,12 +27,18 @@ import {
   type TripWithMembers,
 } from "@/db/queries";
 import type { ActionResult, ExpensePayload } from "@/components/expense-payload";
+import { DEMO_SLUG } from "@/db/demo-data";
 import { enforceLimit, isOverLimit, recordHit } from "@/db/rate-limit";
+import { computeBalances } from "@/lib/balances";
+import { DEMO_READ_ONLY_MESSAGE, isDemoWriteBlocked } from "@/lib/demo-guard";
 import { UserError } from "@/lib/errors";
 import { isRecord } from "@/lib/guards";
 import { toUserError } from "@/lib/pg-errors";
+import { isSuggestedTransfer, planSettlement } from "@/lib/settle-plan";
+import { parseMarkPaidInput } from "@/lib/settlement";
 import { CREATE_TRIP_LIMIT_MESSAGE, RATE_LIMITS, WRITE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getCurrentMemberId, setIdentityCookie } from "./identity";
+import { toMathsExpenses } from "./maths-input";
 import { EMOJIS, VOTES, type Emoji, type Vote } from "@/lib/types";
 
 // Server actions are public endpoints: every argument below can be any JSON a client sends,
@@ -41,15 +52,20 @@ const TRIP_GONE = "This trip no longer exists";
 
 /**
  * Loads the trip for a mutating action and rate-limits the caller. Every action here writes, so
- * this is the one choke point. A client that keeps asking for slugs that do not exist is refused
+ * this is the one choke point, and it is also where the demo trip is made read-only in production
+ * (`cookieOnly` is for actions that only set the identity cookie and never touch the database).
+ * A client that keeps asking for slugs that do not exist is refused
  * with the same message as a missing trip, so guessing slugs cannot be sped up.
  */
-async function loadTrip(slug: unknown): Promise<TripWithMembers> {
+async function loadTrip(slug: unknown, options: { cookieOnly?: boolean } = {}): Promise<TripWithMembers> {
   if (await isOverLimit(RATE_LIMITS.slugMiss)) throw new UserError(TRIP_GONE);
   const trip = await getTripBySlug(requireString(slug, "Trip link"));
   if (!trip) {
     await recordHit(RATE_LIMITS.slugMiss);
     throw new UserError(TRIP_GONE);
+  }
+  if (!options.cookieOnly && isDemoWriteBlocked(trip.slug, DEMO_SLUG, process.env)) {
+    throw new UserError(DEMO_READ_ONLY_MESSAGE);
   }
   await enforceLimit(RATE_LIMITS.write, WRITE_LIMIT_MESSAGE, trip.id);
   return trip;
@@ -116,7 +132,7 @@ export async function createTripAction(_previous: CreateTripState, formData: For
 
 export async function chooseIdentityAction(slug: string, memberId: string): Promise<ActionResult> {
   return guarded(async () => {
-    const trip = await loadTrip(slug);
+    const trip = await loadTrip(slug, { cookieOnly: true });
     if (!trip.members.some((m) => m.id === memberId)) throw new UserError("That person is not on this trip");
     await setIdentityCookie(trip.id, trip.slug, memberId);
     refresh(slug);
@@ -272,6 +288,42 @@ export async function removeMemberAction(slug: string, memberId: string): Promis
     const trip = await loadTrip(slug);
     await requireMemberInTrip(trip, memberId);
     await removeMember(memberId);
+    refresh(slug);
+  });
+}
+
+// ---------- settlements ----------
+
+/** A recorded payment must be exactly one of the transfers on screen (same view, exact or whole rupees), so no partial or invented amounts. */
+export async function markPaidAction(
+  slug: string,
+  payload: { from: string; to: string; amountPaise: number; round: boolean },
+): Promise<ActionResult> {
+  return guarded(async () => {
+    const trip = await loadTrip(slug);
+    const input = parseMarkPaidInput(payload);
+    await requireMemberInTrip(trip, input.from);
+    await requireMemberInTrip(trip, input.to);
+    const [expenses, payments] = await Promise.all([getExpenses(trip.id), getSettlements(trip.id)]);
+    const balances = computeBalances(
+      trip.members,
+      toMathsExpenses(expenses),
+      payments.map((p) => ({ from: p.fromMember, to: p.toMember, amountPaise: p.amountPaise })),
+    );
+    if (!isSuggestedTransfer(planSettlement(balances, input.round).transfers, input)) {
+      throw new UserError("That payment is no longer needed - refresh to see what is left to pay");
+    }
+    await createSettlement(trip.id, input);
+    refresh(slug);
+  });
+}
+
+export async function removeSettlementAction(slug: string, settlementId: string): Promise<ActionResult> {
+  return guarded(async () => {
+    const trip = await loadTrip(slug);
+    const settlement = await getSettlement(requireString(settlementId, "Payment"));
+    if (!settlement || settlement.tripId !== trip.id) throw new UserError("That payment no longer exists");
+    await deleteSettlement(settlement.id);
     refresh(slug);
   });
 }

@@ -138,6 +138,8 @@ runs the unit tests for the money, split, balance, settle-up and summary maths (
 
 ## Deploying to Vercel with Neon
 
+The ordered deploy checklist, with the acceptance checks, is in [docs/deploy.md](docs/deploy.md).
+
 1. Create a free project at [neon.tech](https://neon.tech) and copy its connection string
    (`postgresql://...`).
 2. Copy `.env.example` to `.env.local` and set `DATABASE_URL=postgresql://...`, then run

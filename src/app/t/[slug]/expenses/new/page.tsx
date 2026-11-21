@@ -4,10 +4,10 @@ import { ExpenseFormLoader } from "../expense-form-loader";
 
 export const metadata = { title: "Add expense" };
 
-export default function NewExpensePage({ params }: PageProps<"/t/[slug]/expenses/new">) {
+export default function NewExpensePage({ params, searchParams }: PageProps<"/t/[slug]/expenses/new">) {
   return (
     <Suspense fallback={<CardSkeleton count={3} height="h-40" />}>
-      <ExpenseFormLoader params={params} />
+      <ExpenseFormLoader params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

@@ -12,8 +12,8 @@ describe("signedINR", () => {
     expect(owes.text.startsWith("-")).toBe(false);
   });
 
-  it("calls zero settled", () => {
-    expect(signedINR(0)).toEqual({ text: "settled", tone: "settled" });
-    expect(signedINR(-0)).toEqual({ text: "settled", tone: "settled" });
+  it("calls zero settled up", () => {
+    expect(signedINR(0)).toEqual({ text: "settled up", tone: "settled" });
+    expect(signedINR(-0)).toEqual({ text: "settled up", tone: "settled" });
   });
 });

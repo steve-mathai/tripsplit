@@ -7,6 +7,7 @@ import { formatINR, parseINR } from "@/lib/money";
 import { CATEGORIES, SPLIT_MODES, type Category, type SplitMode } from "@/lib/types";
 import { Avatar } from "./avatar";
 import { CATEGORY_META } from "./categories";
+import type { ExpensePrefill } from "@/lib/quick-add";
 import { formatDayShort } from "./dates";
 import { MinusIcon, PlusIcon, TrashIcon } from "./icons";
 
@@ -42,6 +43,7 @@ export function ExpenseForm({
   defaultPaidBy,
   defaultDay,
   initial,
+  prefill,
 }: {
   slug: string;
   members: FormMember[];
@@ -49,11 +51,16 @@ export function ExpenseForm({
   defaultPaidBy: string;
   defaultDay: string;
   initial?: ExpenseFormInitial;
+  /** Values understood by Quick add; only used on a new expense. */
+  prefill?: ExpensePrefill;
 }) {
-  const [description, setDescription] = useState(initial?.description ?? "");
-  const [amountText, setAmountText] = useState(initial ? toInputRupees(initial.amountPaise) : "");
+  const [description, setDescription] = useState(initial?.description ?? prefill?.description ?? "");
+  const [amountText, setAmountText] = useState(() => {
+    const paise = initial?.amountPaise ?? prefill?.amountPaise;
+    return paise === undefined ? "" : toInputRupees(paise);
+  });
   const [category, setCategory] = useState<Category>(initial?.category ?? "food");
-  const [paidBy, setPaidBy] = useState(initial?.paidBy ?? defaultPaidBy);
+  const [paidBy, setPaidBy] = useState(initial?.paidBy ?? prefill?.paidBy ?? defaultPaidBy);
   const [day, setDay] = useState(initial ? (initial.day ?? NO_DAY) : defaultDay);
   const [mode, setMode] = useState<SplitMode>(initial?.mode ?? "equal");
   const [selected, setSelected] = useState<Set<string>>(
@@ -72,6 +79,12 @@ export function ExpenseForm({
   const [pending, startTransition] = useTransition();
 
   const amountPaise = parseINR(amountText);
+  // Live refresh waits while a save is running or the typed text differs from what the page loaded with.
+  // Prefilled text counts as unsaved: the baseline is the saved expense, or empty for a new one.
+  const holdRefresh =
+    pending ||
+    description !== (initial?.description ?? "") ||
+    amountText !== (initial ? toInputRupees(initial.amountPaise) : "");
 
   const splits = useMemo(
     () =>
@@ -163,7 +176,7 @@ export function ExpenseForm({
 
   return (
     // pb-24 keeps the last field clear of the fixed save bar.
-    <div className="pb-24">
+    <div className="pb-24" data-refresh-hold={holdRefresh ? "" : undefined}>
       {/* The slim bar above (trip header) already carries the back link for this route. */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <h1 className="min-w-0 truncate text-title">{initial ? "Edit expense" : "Add expense"}</h1>
